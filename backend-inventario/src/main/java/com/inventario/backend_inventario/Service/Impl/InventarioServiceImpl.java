@@ -171,4 +171,89 @@ public class InventarioServiceImpl implements InventarioService {
             return dto;
         }).collect(Collectors.toList());
     }
+    @Override
+    @Transactional(readOnly = true)
+    public boolean verificarStock(Integer sedeId, Long productoId, Integer cantidad) {
+        Sede sede = sedeRepository.findById(sedeId).orElse(null);
+        Producto producto = productoRepository.findById(productoId).orElse(null);
+
+        if (sede == null || producto == null) {
+            return false;
+        }
+        Inventario inventario = inventarioRepository.findByProductoAndSede(producto, sede)
+                .orElse(null);
+
+        if (inventario == null) {
+            return false; 
+        }
+
+        return inventario.getStockActual() >= cantidad;
+    }
+
+    @Override
+    @Transactional
+    public void registrarMovimiento(Integer sedeId, Long productoId, String tipoMovimientoStr, Integer cantidad) {
+        Usuario usuario = getUsuarioLogueado();
+
+        // 1. Validar existencias de Sede y Producto
+        Sede sede = sedeRepository.findById(sedeId)
+                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada ID: " + sedeId));
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado ID: " + productoId));
+
+        // 2. Buscar o Validar el Tipo de Movimiento (Ej: "SALIDA_TRANSFERENCIA", "ENTRADA_TRANSFERENCIA")
+        TipoMovimiento tipoMovimiento = tipoMovimientoRepository.findByTipo(tipoMovimientoStr)
+                .orElseThrow(() -> new EntityNotFoundException("Tipo de movimiento no configurado: " + tipoMovimientoStr));
+
+        // 3. Obtener o Crear Inventario
+        Inventario inventario = inventarioRepository.findByProductoAndSede(producto, sede)
+                .orElse(new Inventario(producto, sede, 0));
+
+        int stockAnterior = inventario.getStockActual();
+        int stockNuevo;
+
+        // 4. Lógica para SUMAR o RESTAR según el tipo de texto
+        // Si es SALIDA, MERMA o VENTA -> Resta
+        if (tipoMovimientoStr.toUpperCase().contains("SALIDA") || 
+            tipoMovimientoStr.toUpperCase().contains("MERMA") || 
+            tipoMovimientoStr.toUpperCase().contains("VENTA")) {
+            
+            if (stockAnterior < cantidad) {
+                throw new IllegalArgumentException("Stock insuficiente para realizar la salida en la sede: " + sede.getNombreSede());
+            }
+            stockNuevo = stockAnterior - cantidad;
+        } else {
+            // Si es ENTRADA, RECEPCIÓN, AJUSTE (+) -> Suma
+            stockNuevo = stockAnterior + cantidad;
+        }
+
+        // 5. Actualizar Inventario
+        inventario.setStockActual(stockNuevo);
+        inventarioRepository.save(inventario);
+
+        // 6. Registrar Movimiento en Kardex
+        String observaciones = String.format("Movimiento automático: %s. Stock: %d -> %d", 
+                                             tipoMovimientoStr, stockAnterior, stockNuevo);
+
+        MovimientoInventario movimiento = new MovimientoInventario(
+                producto,
+                sede,
+                usuario,
+                tipoMovimiento,
+                cantidad,
+                observaciones
+        );
+        movimientoInventarioRepository.save(movimiento);
+
+        // 7. Auditoría
+        historialActividadService.registrarActividad(
+                usuario, 
+                "MOVIMIENTO_INVENTARIO", 
+                "Se registró " + tipoMovimientoStr + " de " + cantidad + " unidades de " + producto.getNombre(),
+                "INVENTARIO", 
+                "MovimientoInventario", 
+                movimiento.getId(), 
+                observaciones
+        );
+    }
 }

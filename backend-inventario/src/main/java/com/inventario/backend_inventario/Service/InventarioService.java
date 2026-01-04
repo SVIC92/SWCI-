@@ -10,10 +10,11 @@ import java.util.List;
 
 public interface InventarioService {
 
-
-    void registrarRecepcion(MovimientoDto movimientoDto);
-
     List<MovimientoInventarioDto> listarMovimientos();
-
     List<InventarioActualDto> listarInventarioActual();
+
+    boolean verificarStock(Integer sedeId, Long productoId, Integer cantidad);
+    
+    void registrarMovimiento(Integer sedeId, Long productoId, String tipoMovimiento, Integer cantidad);
+    void registrarRecepcion(MovimientoDto movimientoDto);
 }

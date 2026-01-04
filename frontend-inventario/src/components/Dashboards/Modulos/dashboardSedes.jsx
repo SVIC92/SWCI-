@@ -15,10 +15,16 @@ const DashboardSedes = () => {
 	];
 	const OpcionesOperacion = [
 		{
-			id: "transferencia-sedes",
-			titulo: "Pedido de Transferencia entre Sedes",
+			id: "pedido-transferencia-sedes",
+			titulo: "Pedido de Transferencia de productos entre Sedes",
 			descripcion: "Realiza pedidos de transferencia de productos entre diferentes sedes.",
-			ruta: "/transferencia-sedes",
+			ruta: "/inventario/transferencias/solicitar",
+		},
+		{
+			id: "solicitudes-transferencia-sedes",
+			titulo: "Solicitudes de Transferencia de productos entre Sedes",
+			descripcion: "Consulta los pedidos de transferencia de productos entre diferentes sedes.",
+			ruta: "/inventario/transferencias/gestion",
 		}
 	];
 

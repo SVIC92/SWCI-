@@ -43,6 +43,8 @@ import IngresarProveedor from "./pages/Mod. Proveedor/IngresarProveedor";
 import DashboardSedes from "./components/Dashboards/Modulos/dashboardSedes";
 import ListaSedes from "./pages/Mod. Sedes/ListaSedes";
 import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
+import GestionTransferencias from "./pages/Mod. Inventario/GestionTransferencias";
+import SolicitarTransferencia from "./pages/Mod. Inventario/SolicitarTransferencia";
 import DashboardInventario from "./components/Dashboards/Modulos/dashboardInventario";
 
 
@@ -321,6 +323,18 @@ const RutasInventario = [
     "/inventario/stock", // La ruta que verá el usuario
     ALL_ROLES, // Todos pueden ver el stock
     ListaInventario
+  ),
+  RutaProtegida(
+    "gestion-transferencias",
+    "//inventario/transferencia/gestion",
+    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
+    GestionTransferencias
+  ),
+  RutaProtegida(
+    "solicitar-transferencia",
+    "/inventario/transferencia/solicitar",
+    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
+    SolicitarTransferencia
   ),
 ];
 
