@@ -18,13 +18,13 @@ const DashboardSedes = () => {
 			id: "pedido-transferencia-sedes",
 			titulo: "Pedido de Transferencia de productos entre Sedes",
 			descripcion: "Realiza pedidos de transferencia de productos entre diferentes sedes.",
-			ruta: "/inventario/transferencias/solicitar",
+			ruta: "/inventario/transferencia/solicitar",
 		},
 		{
 			id: "solicitudes-transferencia-sedes",
 			titulo: "Solicitudes de Transferencia de productos entre Sedes",
 			descripcion: "Consulta los pedidos de transferencia de productos entre diferentes sedes.",
-			ruta: "/inventario/transferencias/gestion",
+			ruta: "/inventario/transferencia/gestion",
 		}
 	];
 

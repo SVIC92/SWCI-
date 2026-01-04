@@ -15,6 +15,7 @@ import {
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom'; // Hook para navegación
 import { listarPendientes, aprobarTransferencia, rechazarTransferencia, listarHistorial } from '../../api/transferenciaApi';
+import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 
 const GestionTransferencias = () => {
     const theme = useTheme();
@@ -52,7 +53,7 @@ const GestionTransferencias = () => {
 
     // --- NAVEGACIÓN ---
     const irASolicitud = () => {
-        navigate('/inventario/transferencias/solicitar'); // Ajusta esta ruta si es diferente en tu routes.js
+        navigate('/inventario/transferencia/solicitar'); // Ajusta esta ruta si es diferente en tu routes.js
     };
 
     // --- ACCIONES (SweetAlert) ---
@@ -135,191 +136,195 @@ const GestionTransferencias = () => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <>
+            <LayoutDashboard>
+                <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
 
-            {/* CABECERA CON TÍTULO Y BOTÓN */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                    Gestión de Transferencias
-                </Typography>
+                    {/* CABECERA CON TÍTULO Y BOTÓN */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                            Gestión de Transferencias
+                        </Typography>
 
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon />}
-                    onClick={irASolicitud}
-                    sx={{ textTransform: 'none', fontWeight: 'bold' }}
-                >
-                    Nueva Solicitud
-                </Button>
-            </Box>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<AddIcon />}
+                            onClick={irASolicitud}
+                            sx={{ textTransform: 'none', fontWeight: 'bold' }}
+                        >
+                            Nueva Solicitud
+                        </Button>
+                    </Box>
 
-            <Paper sx={{ width: '100%', mb: 2, overflow: 'hidden' }}>
-                <Tabs
-                    value={tabActual}
-                    onChange={handleTabChange}
-                    indicatorColor="primary"
-                    textColor="primary"
-                    variant="fullWidth"
-                    sx={{ borderBottom: 1, borderColor: 'divider' }}
-                >
-                    <Tab label="Pendientes de Aprobación" />
-                    <Tab label="Historial Completo" />
-                </Tabs>
+                    <Paper sx={{ width: '100%', mb: 2, overflow: 'hidden' }}>
+                        <Tabs
+                            value={tabActual}
+                            onChange={handleTabChange}
+                            indicatorColor="primary"
+                            textColor="primary"
+                            variant="fullWidth"
+                            sx={{ borderBottom: 1, borderColor: 'divider' }}
+                        >
+                            <Tab label="Pendientes de Aprobación" />
+                            <Tab label="Historial Completo" />
+                        </Tabs>
 
-                <TableContainer component={Box} sx={{ maxHeight: 600 }}>
-                    <Table stickyHeader>
-                        <TableHead>
-                            <TableRow sx={{
-                                '& th': {
-                                    backgroundColor: theme.palette.mode === 'dark' ? theme.palette.action.hover : '#f5f5f5',
-                                    fontWeight: 'bold'
-                                }
-                            }}>
-                                <TableCell>ID</TableCell>
-                                <TableCell>Fecha</TableCell>
-                                <TableCell>Origen</TableCell>
-                                <TableCell>Destino</TableCell>
-                                <TableCell>Solicitante</TableCell>
-                                {tabActual === 1 && <TableCell>Estado</TableCell>}
-                                <TableCell align="center">Items</TableCell>
-                                <TableCell align="center">Acciones</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {(tabActual === 0 ? pendientes : historial).length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
-                                        <Typography color="textSecondary">
-                                            No hay registros.
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                (tabActual === 0 ? pendientes : historial).map((sol) => (
-                                    <TableRow key={sol.id} hover>
-                                        <TableCell>#{sol.id}</TableCell>
-                                        <TableCell>{new Date(sol.fechaSolicitud).toLocaleDateString()}</TableCell>
-                                        <TableCell>{sol.sedeOrigen?.nombre}</TableCell>
-                                        <TableCell>{sol.sedeDestino?.nombre}</TableCell>
-                                        <TableCell>{sol.usuarioSolicitante?.nombre}</TableCell>
-
-                                        {tabActual === 1 && (
-                                            <TableCell>{getEstadoChip(sol.estado)}</TableCell>
-                                        )}
-
-                                        <TableCell align="center">
-                                            <Button
-                                                variant="outlined" size="small"
-                                                startIcon={<VisibilityIcon />}
-                                                onClick={() => verDetalles(sol)}
-                                            >
-                                                Ver
-                                            </Button>
-                                        </TableCell>
-
-                                        <TableCell align="center">
-                                            {tabActual === 0 ? (
-                                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                                                    <Tooltip title="Aprobar">
-                                                        <IconButton color="success" onClick={() => handleAprobar(sol.id)}>
-                                                            <CheckIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Rechazar">
-                                                        <IconButton color="error" onClick={() => handleRechazar(sol.id)}>
-                                                            <CancelIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </Box>
-                                            ) : (
-                                                sol.estado === 'RECHAZADO' && (
-                                                    <Tooltip title="Ver Motivo">
-                                                        <IconButton color="info" onClick={() => Swal.fire({
-                                                            title: 'Motivo',
-                                                            text: sol.motivoRechazo,
-                                                            background: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
-                                                            color: theme.palette.text.primary
-                                                        })}>
-                                                            <InfoIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                )
-                                            )}
-                                        </TableCell>
+                        <TableContainer component={Box} sx={{ maxHeight: 600 }}>
+                            <Table stickyHeader>
+                                <TableHead>
+                                    <TableRow sx={{
+                                        '& th': {
+                                            backgroundColor: theme.palette.mode === 'dark' ? theme.palette.action.hover : '#f5f5f5',
+                                            fontWeight: 'bold'
+                                        }
+                                    }}>
+                                        <TableCell>ID</TableCell>
+                                        <TableCell>Fecha</TableCell>
+                                        <TableCell>Origen</TableCell>
+                                        <TableCell>Destino</TableCell>
+                                        <TableCell>Solicitante</TableCell>
+                                        {tabActual === 1 && <TableCell>Estado</TableCell>}
+                                        <TableCell align="center">Items</TableCell>
+                                        <TableCell align="center">Acciones</TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Paper>
-
-            {/* --- MODAL DETALLES --- */}
-            <Dialog
-                open={modalOpen}
-                onClose={cerrarModal}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle sx={{
-                    borderBottom: 1,
-                    borderColor: 'divider',
-                    bgcolor: theme.palette.background.default
-                }}>
-                    Detalles de Solicitud #{solicitudSeleccionada?.id}
-                </DialogTitle>
-                <DialogContent sx={{ mt: 2 }}>
-                    {solicitudSeleccionada && (
-                        <>
-                            <Box sx={{
-                                mb: 3, p: 2, borderRadius: 1,
-                                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                                border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`
-                            }}>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={6}>
-                                        <Typography variant="subtitle2" color="textSecondary">Desde:</Typography>
-                                        <Typography variant="body1" fontWeight="bold">{solicitudSeleccionada.sedeOrigen?.nombre}</Typography>
-                                    </Grid>
-                                    <Grid item xs={6}>
-                                        <Typography variant="subtitle2" color="textSecondary">Hacia:</Typography>
-                                        <Typography variant="body1" fontWeight="bold">{solicitudSeleccionada.sedeDestino?.nombre}</Typography>
-                                    </Grid>
-                                </Grid>
-                            </Box>
-
-                            <Typography variant="h6" gutterBottom>Productos Solicitados</Typography>
-                            <TableContainer component={Paper} variant="outlined">
-                                <Table size="small">
-                                    <TableHead>
-                                        <TableRow sx={{ bgcolor: theme.palette.action.hover }}>
-                                            <TableCell>Producto</TableCell>
-                                            <TableCell>Código</TableCell>
-                                            <TableCell align="right">Cantidad</TableCell>
+                                </TableHead>
+                                <TableBody>
+                                    {(tabActual === 0 ? pendientes : historial).length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={8} align="center" sx={{ py: 3 }}>
+                                                <Typography color="textSecondary">
+                                                    No hay registros.
+                                                </Typography>
+                                            </TableCell>
                                         </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {solicitudSeleccionada.detalles?.map((det, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{det.producto?.nombre}</TableCell>
-                                                <TableCell>{det.producto?.codigo}</TableCell>
-                                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>{det.cantidad}</TableCell>
+                                    ) : (
+                                        (tabActual === 0 ? pendientes : historial).map((sol) => (
+                                            <TableRow key={sol.id} hover>
+                                                <TableCell>#{sol.id}</TableCell>
+                                                <TableCell>{new Date(sol.fechaSolicitud).toLocaleDateString()}</TableCell>
+                                                <TableCell>{sol.sedeOrigen?.nombre}</TableCell>
+                                                <TableCell>{sol.sedeDestino?.nombre}</TableCell>
+                                                <TableCell>{sol.usuarioSolicitante?.nombre}</TableCell>
+
+                                                {tabActual === 1 && (
+                                                    <TableCell>{getEstadoChip(sol.estado)}</TableCell>
+                                                )}
+
+                                                <TableCell align="center">
+                                                    <Button
+                                                        variant="outlined" size="small"
+                                                        startIcon={<VisibilityIcon />}
+                                                        onClick={() => verDetalles(sol)}
+                                                    >
+                                                        Ver
+                                                    </Button>
+                                                </TableCell>
+
+                                                <TableCell align="center">
+                                                    {tabActual === 0 ? (
+                                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                                                            <Tooltip title="Aprobar">
+                                                                <IconButton color="success" onClick={() => handleAprobar(sol.id)}>
+                                                                    <CheckIcon />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                            <Tooltip title="Rechazar">
+                                                                <IconButton color="error" onClick={() => handleRechazar(sol.id)}>
+                                                                    <CancelIcon />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        </Box>
+                                                    ) : (
+                                                        sol.estado === 'RECHAZADO' && (
+                                                            <Tooltip title="Ver Motivo">
+                                                                <IconButton color="info" onClick={() => Swal.fire({
+                                                                    title: 'Motivo',
+                                                                    text: sol.motivoRechazo,
+                                                                    background: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
+                                                                    color: theme.palette.text.primary
+                                                                })}>
+                                                                    <InfoIcon />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )
+                                                    )}
+                                                </TableCell>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={cerrarModal} color="inherit">
-                        Cerrar
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Container>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Paper>
+
+                    {/* --- MODAL DETALLES --- */}
+                    <Dialog
+                        open={modalOpen}
+                        onClose={cerrarModal}
+                        maxWidth="md"
+                        fullWidth
+                    >
+                        <DialogTitle sx={{
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            bgcolor: theme.palette.background.default
+                        }}>
+                            Detalles de Solicitud #{solicitudSeleccionada?.id}
+                        </DialogTitle>
+                        <DialogContent sx={{ mt: 2 }}>
+                            {solicitudSeleccionada && (
+                                <>
+                                    <Box sx={{
+                                        mb: 3, p: 2, borderRadius: 1,
+                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                        border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`
+                                    }}>
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={6}>
+                                                <Typography variant="subtitle2" color="textSecondary">Desde:</Typography>
+                                                <Typography variant="body1" fontWeight="bold">{solicitudSeleccionada.sedeOrigen?.nombre}</Typography>
+                                            </Grid>
+                                            <Grid item xs={6}>
+                                                <Typography variant="subtitle2" color="textSecondary">Hacia:</Typography>
+                                                <Typography variant="body1" fontWeight="bold">{solicitudSeleccionada.sedeDestino?.nombre}</Typography>
+                                            </Grid>
+                                        </Grid>
+                                    </Box>
+
+                                    <Typography variant="h6" gutterBottom>Productos Solicitados</Typography>
+                                    <TableContainer component={Paper} variant="outlined">
+                                        <Table size="small">
+                                            <TableHead>
+                                                <TableRow sx={{ bgcolor: theme.palette.action.hover }}>
+                                                    <TableCell>Producto</TableCell>
+                                                    <TableCell>Código</TableCell>
+                                                    <TableCell align="right">Cantidad</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {solicitudSeleccionada.detalles?.map((det, index) => (
+                                                    <TableRow key={index}>
+                                                        <TableCell>{det.producto?.nombre}</TableCell>
+                                                        <TableCell>{det.producto?.codigo}</TableCell>
+                                                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{det.cantidad}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={cerrarModal} color="inherit">
+                                Cerrar
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                </Container>
+            </LayoutDashboard>
+        </>
     );
 };
 

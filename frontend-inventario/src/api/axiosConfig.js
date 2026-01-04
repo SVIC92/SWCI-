@@ -19,7 +19,7 @@ axiosInstance.interceptors.request.use(
         const parsedStorage = JSON.parse(storage);
         if (parsedStorage.state && parsedStorage.state.token) {
           token = parsedStorage.state.token;
-        }a
+        }
       } catch (e) {
         console.error("Error al parsear el storage de Zustand", e);
       }

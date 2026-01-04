@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/transferencia")
+@RequestMapping("/api/transferencia")
 public class SolicitudTransferenciaController {
 
     @Autowired
