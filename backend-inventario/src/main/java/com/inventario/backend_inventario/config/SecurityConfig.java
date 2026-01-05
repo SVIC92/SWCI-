@@ -42,9 +42,9 @@ public class SecurityConfig {
                 "/api/auth/forgot-password", 
                 "/api/auth/reset-password",
                 "/api/auth/mfa/login-verify",
-                "/ws/**"
+                "/ws/**",
+                "/api/chat-gerente/**"
             ).permitAll()
-                .requestMatchers("/api/chat-gerente").authenticated()
                 .anyRequest().authenticated()           
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
