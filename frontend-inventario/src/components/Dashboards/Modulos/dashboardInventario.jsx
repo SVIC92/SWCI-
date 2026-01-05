@@ -18,7 +18,7 @@ const DashboardInventario = () => {
             id: "transferencia-sedes",
             titulo: "Pedido de Transferencia entre Sedes",
             descripcion: "Realiza pedidos de transferencia de productos entre diferentes sedes.",
-            ruta: "/transferencia-sedes",
+            ruta: "/inventario/transferencia/gestion",
         },
         {
             id: "recepcion-mercaderia",

@@ -1,35 +1,34 @@
-// Ubicación: src/pages/Mod.Inventario/ListaMovimientos.jsx
-
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Chip, Typography } from "@mui/material";
-import { format } from "date-fns"; // Para formatear la fecha
-
-// Tus componentes
+import { format } from "date-fns";
 import { listarMovimientos } from "../../api/InventarioApi";
-import TablaLista from "../../components/TablaLista"; // Tu componente TablaLista
+import TablaLista from "../../components/TablaLista";
 
 function ListaMovimientos() {
   const navigate = useNavigate();
 
-  // 1. Cargar los datos con React Query
   const { data: response, isLoading } = useQuery({
     queryKey: ["movimientos"],
     queryFn: listarMovimientos,
-    initialData: { data: [] }, // Aseguramos que la estructura inicial sea segura
+    initialData: { data: [] },
   });
   
-  // Usamos useMemo para procesar los datos solo cuando cambian
   const movimientosProcesados = useMemo(() => {
-    return response.data.map(mov => ({
-      ...mov,
-      // Formateamos la fecha para que la tabla la lea bien
-      fechaFormateada: format(new Date(mov.fecha), "dd/MM/yyyy HH:mm:ss"),
-    }));
+    if (!response || !response.data) return [];
+
+    return response.data.map(mov => {
+      const fechaStr = mov.fecha;
+      const fechaUTC = fechaStr && !fechaStr.endsWith('Z') ? fechaStr + 'Z' : fechaStr;
+
+      return {
+        ...mov,
+        fechaFormateada: fechaUTC ? format(new Date(fechaUTC), "dd/MM/yyyy HH:mm:ss") : '-'
+      };
+    });
   }, [response.data]);
 
-  // 2. Columnas para tu DataGrid (Las 9 columnas)
   const columns = [
     { field: "idMovimiento", headerName: "ID", width: 80 },
     { field: "skuProducto", headerName: "SKU", width: 100 },
@@ -62,27 +61,24 @@ function ListaMovimientos() {
         </Typography>
       )
     },
-    { 
-      field: "fechaFormateada", // Usamos la fecha formateada
+    {
+      field: "fechaFormateada",
       headerName: "Fecha/Hora", 
       width: 170
     },
     { field: "observaciones", headerName: "Observaciones", flex: 2, minWidth: 200 },
   ];
 
-  // 3. Renderizar la tabla con tu componente reutilizable
   return (
     <TablaLista
       title="KARDEX (Historial de Movimientos)"
       columns={columns}
-      data={movimientosProcesados} // Usamos los datos procesados
+      data={movimientosProcesados}
       isLoading={isLoading}
-      onBack={() => navigate("/dashboard-inventario")} // Botón "Volver"
-      getRowId={(row) => row.idMovimiento} // Le decimos a la tabla cuál es el ID
-      
-      // Ocultamos los botones que no se usan en un reporte
-      showAddButton={false} 
-      showRefreshButton={true} // Dejamos el de refrescar
+      onBack={() => navigate("/dashboard-inventario")}
+      getRowId={(row) => row.idMovimiento}
+      showAddButton={false}
+      showRefreshButton={true}
     />
   );
 }

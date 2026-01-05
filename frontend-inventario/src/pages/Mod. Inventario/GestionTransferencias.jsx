@@ -10,25 +10,23 @@ import {
     Cancel as CancelIcon,
     Info as InfoIcon,
     Visibility as VisibilityIcon,
-    AddCircleOutline as AddIcon // Icono para el botón
+    AddCircleOutline as AddIcon
 } from '@mui/icons-material';
 import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom'; // Hook para navegación
+import { useNavigate } from 'react-router-dom';
 import { listarPendientes, aprobarTransferencia, rechazarTransferencia, listarHistorial } from '../../api/transferenciaApi';
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 
 const GestionTransferencias = () => {
     const theme = useTheme();
-    const navigate = useNavigate(); // Inicializar hook de navegación
+    const navigate = useNavigate();
 
-    // --- ESTADOS ---
     const [pendientes, setPendientes] = useState([]);
     const [historial, setHistorial] = useState([]);
     const [tabActual, setTabActual] = useState(0);
     const [modalOpen, setModalOpen] = useState(false);
     const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null);
 
-    // --- EFECTOS ---
     useEffect(() => {
         cargarDatos();
     }, [tabActual]);
@@ -51,12 +49,10 @@ const GestionTransferencias = () => {
         setTabActual(newValue);
     };
 
-    // --- NAVEGACIÓN ---
     const irASolicitud = () => {
-        navigate('/inventario/transferencia/solicitar'); // Ajusta esta ruta si es diferente en tu routes.js
+        navigate('/inventario/transferencia/solicitar');
     };
 
-    // --- ACCIONES (SweetAlert) ---
     const handleAprobar = async (id) => {
         const result = await Swal.fire({
             title: '¿Aprobar Transferencia?',
@@ -115,7 +111,6 @@ const GestionTransferencias = () => {
         }
     };
 
-    // --- MODAL Y RENDERIZADO ---
     const verDetalles = (solicitud) => {
         setSolicitudSeleccionada(solicitud);
         setModalOpen(true);
@@ -140,7 +135,6 @@ const GestionTransferencias = () => {
             <LayoutDashboard>
                 <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
 
-                    {/* CABECERA CON TÍTULO Y BOTÓN */}
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                             Gestión de Transferencias
@@ -202,10 +196,17 @@ const GestionTransferencias = () => {
                                         (tabActual === 0 ? pendientes : historial).map((sol) => (
                                             <TableRow key={sol.id} hover>
                                                 <TableCell>#{sol.id}</TableCell>
-                                                <TableCell>{new Date(sol.fechaSolicitud).toLocaleDateString()}</TableCell>
-                                                <TableCell>{sol.sedeOrigen?.nombre}</TableCell>
-                                                <TableCell>{sol.sedeDestino?.nombre}</TableCell>
-                                                <TableCell>{sol.usuarioSolicitante?.nombre}</TableCell>
+                                                <TableCell>
+                                                    {new Date(
+                                                        sol.fechaSolicitud.endsWith('Z') ? sol.fechaSolicitud : sol.fechaSolicitud + 'Z'
+                                                    ).toLocaleString('es-PE', {
+                                                        day: '2-digit', month: '2-digit', year: 'numeric',
+                                                        hour: '2-digit', minute: '2-digit', hour12: true
+                                                    })}
+                                                </TableCell>
+                                                <TableCell>{sol.sedeOrigen?.nombreSede}</TableCell>
+                                                <TableCell>{sol.sedeDestino?.nombreSede}</TableCell>
+                                                <TableCell>{sol.usuarioSolicitante?.nombre_u}</TableCell>
 
                                                 {tabActual === 1 && (
                                                     <TableCell>{getEstadoChip(sol.estado)}</TableCell>
@@ -258,7 +259,6 @@ const GestionTransferencias = () => {
                         </TableContainer>
                     </Paper>
 
-                    {/* --- MODAL DETALLES --- */}
                     <Dialog
                         open={modalOpen}
                         onClose={cerrarModal}
@@ -283,11 +283,11 @@ const GestionTransferencias = () => {
                                         <Grid container spacing={2}>
                                             <Grid item xs={6}>
                                                 <Typography variant="subtitle2" color="textSecondary">Desde:</Typography>
-                                                <Typography variant="body1" fontWeight="bold">{solicitudSeleccionada.sedeOrigen?.nombre}</Typography>
+                                                <Typography variant="body1" fontWeight="bold">{solicitudSeleccionada.sedeOrigen?.nombreSede}</Typography>
                                             </Grid>
                                             <Grid item xs={6}>
                                                 <Typography variant="subtitle2" color="textSecondary">Hacia:</Typography>
-                                                <Typography variant="body1" fontWeight="bold">{solicitudSeleccionada.sedeDestino?.nombre}</Typography>
+                                                <Typography variant="body1" fontWeight="bold">{solicitudSeleccionada.sedeDestino?.nombreSede}</Typography>
                                             </Grid>
                                         </Grid>
                                     </Box>
@@ -306,7 +306,7 @@ const GestionTransferencias = () => {
                                                 {solicitudSeleccionada.detalles?.map((det, index) => (
                                                     <TableRow key={index}>
                                                         <TableCell>{det.producto?.nombre}</TableCell>
-                                                        <TableCell>{det.producto?.codigo}</TableCell>
+                                                        <TableCell>{det.producto?.sku}</TableCell>
                                                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>{det.cantidad}</TableCell>
                                                     </TableRow>
                                                 ))}

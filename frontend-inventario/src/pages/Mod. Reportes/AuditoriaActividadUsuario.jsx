@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query'; // 1. Importar hook
+import { useQuery } from '@tanstack/react-query';
 import {
     Box,
     Grid,
@@ -14,12 +14,11 @@ import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import { useTheme } from '@mui/material';
 import TablaLista from '../../components/TablaLista';
 import { filtrarActividades } from '../../api/historialActividadApi';
-import { getUsuarios } from '../../api/usuarioApi'; // Asegúrate que esta importación sea correcta
+import { getUsuarios } from '../../api/usuarioApi';
 
 const AuditoriaActividadUsuario = () => {
     const navigate = useNavigate();
     const theme = useTheme();
-    // Estado del formulario (Inputs)
     const [filtros, setFiltros] = useState({
         fechaInicio: '',
         fechaFin: '',
@@ -27,26 +26,22 @@ const AuditoriaActividadUsuario = () => {
         modulo: ''
     });
 
-    // Estado para la consulta (Lo que dispara el fetch)
     const [filtrosAplicados, setFiltrosAplicados] = useState({});
 
-    // 2. Query para cargar Usuarios (Reemplaza el useEffect de usuarios)
     const { data: listaUsuarios = [] } = useQuery({
         queryKey: ['usuarios'],
         queryFn: getUsuarios,
-        staleTime: 1000 * 60 * 10, // Cachear usuarios por 10 minutos
+        staleTime: 1000 * 60 * 10,
         initialData: []
     });
 
-    // 3. Query para cargar Actividades (Depende de filtrosAplicados)
     const {
         data: actividades = [],
         isLoading,
         refetch
     } = useQuery({
-        queryKey: ['auditoria', filtrosAplicados], // Al cambiar filtrosAplicados, React Query refesca
+        queryKey: ['auditoria', filtrosAplicados],
         queryFn: () => filtrarActividades(filtrosAplicados),
-        // keepPreviousData: true // (Opcional) Mantiene los datos viejos mientras cargan los nuevos
     });
 
     const handleInputChange = (e) => {
@@ -54,16 +49,14 @@ const AuditoriaActividadUsuario = () => {
         setFiltros(prev => ({ ...prev, [name]: value }));
     };
 
-    // 4. Manejador de búsqueda: Actualiza filtrosAplicados para disparar el Query
     const handleBuscar = () => {
         const params = {};
-        // Solo agregamos al objeto si tienen valor
         if (filtros.usuarioId) params.usuarioId = filtros.usuarioId;
         if (filtros.modulo) params.modulo = filtros.modulo;
         if (filtros.fechaInicio) params.fechaInicio = filtros.fechaInicio;
         if (filtros.fechaFin) params.fechaFin = filtros.fechaFin;
 
-        setFiltrosAplicados(params); // Esto cambiará la queryKey y disparará el fetch
+        setFiltrosAplicados(params);
     };
 
     const handleLimpiar = () => {
@@ -74,7 +67,7 @@ const AuditoriaActividadUsuario = () => {
             modulo: ''
         };
         setFiltros(estadoInicial);
-        setFiltrosAplicados({}); // Limpia la tabla o trae todo (según tu backend)
+        setFiltrosAplicados({});
     };
 
     const columns = useMemo(() => [
@@ -84,7 +77,18 @@ const AuditoriaActividadUsuario = () => {
             width: 200,
             valueFormatter: (params) => {
                 if (!params) return '';
-                return new Date(params).toLocaleString('es-PE');
+
+                const fechaUTC = params.endsWith('Z') ? params : params + 'Z';
+
+                return new Date(fechaUTC).toLocaleString('es-PE', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                });
             }
         },
         { field: 'nombreUsuario', headerName: 'Usuario', width: 100 },
@@ -204,10 +208,13 @@ const AuditoriaActividadUsuario = () => {
                             sx={{ minWidth: { xs: '100%', sm: 220, md: 240 } }}
                         >
                             <MenuItem value=""><em>Todos</em></MenuItem>
-                            <MenuItem value="Inventario">INVENTARIO</MenuItem>
-                            <MenuItem value="Inicio Sesión">INICIO SESIÓN</MenuItem>
-                            <MenuItem value="Usuario">USUARIO</MenuItem>
-                            <MenuItem value="Producto">PRODUCTO</MenuItem>
+                            <MenuItem value="INVENTARIO">INVENTARIO</MenuItem>
+                            <MenuItem value="INICIO SESIÓN">INICIO SESIÓN</MenuItem>
+                            <MenuItem value="USUARIO">USUARIO</MenuItem>
+                            <MenuItem value="PRODUCTO">PRODUCTO</MenuItem>
+                            <MenuItem value="AREA">AREA</MenuItem>
+                            <MenuItem value="CATEGORIA">CATEGORIA</MenuItem>
+                            <MenuItem value="SEDES">SEDE</MenuItem>
                         </TextField>
                     </Grid>
                     <Grid item xs={12} md={2} sx={{ display: 'flex', gap: 1 }}>

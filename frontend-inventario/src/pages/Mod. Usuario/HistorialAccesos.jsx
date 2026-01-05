@@ -75,7 +75,10 @@ const HistorialAccesos = () => {
                                                         <Chip label={fila.rol} size="small" color="primary" variant="outlined" />
                                                     </TableCell>
                                                     <TableCell>
-                                                        {new Date(fila.ultimaFecha).toLocaleString('es-ES', {
+                                                        {new Date(
+                                                            fila.ultimaFecha.endsWith('Z') ? fila.ultimaFecha : fila.ultimaFecha + 'Z'
+                                                        ).toLocaleString('es-PE', {
+                                                            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                                                             day: '2-digit', month: '2-digit', year: 'numeric',
                                                             hour: '2-digit', minute: '2-digit', second: '2-digit'
                                                         })}

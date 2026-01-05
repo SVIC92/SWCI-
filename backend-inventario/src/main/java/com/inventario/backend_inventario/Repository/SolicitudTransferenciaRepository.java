@@ -7,5 +7,5 @@ import java.util.List;
 public interface SolicitudTransferenciaRepository extends JpaRepository<SolicitudTransferencia, Long> {
     List<SolicitudTransferencia> findByEstado(SolicitudTransferencia.EstadoSolicitud estado);
     List<SolicitudTransferencia> findBySedeOrigenIdSede(Integer idSede);
-    List<SolicitudTransferencia> findByEstadoNot(SolicitudTransferencia.EstadoSolicitud estado);
+    List<SolicitudTransferencia> findByEstadoNotOrderByFechaSolicitudDesc(SolicitudTransferencia.EstadoSolicitud estado);
 }

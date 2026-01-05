@@ -131,6 +131,6 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
     @Override
     public List<SolicitudTransferencia> listarHistorial() {
         // Asumiendo que agregaste este método en el Repository: findByEstadoNot(EstadoSolicitud.PENDIENTE)
-        return solicitudRepo.findByEstadoNot(SolicitudTransferencia.EstadoSolicitud.PENDIENTE);
+        return solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(SolicitudTransferencia.EstadoSolicitud.PENDIENTE);
     }
 }

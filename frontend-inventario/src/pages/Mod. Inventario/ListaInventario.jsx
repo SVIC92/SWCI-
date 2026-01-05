@@ -1,19 +1,14 @@
-// Ubicación: src/pages/Mod.Inventario/ListaInventario.jsx
-
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns"; // Usamos la librería que ya instalamos
-import { Chip, Typography } from "@mui/material"; // Para el stock
-
-// Tus componentes
+import { format } from "date-fns";
+import { Chip, Typography } from "@mui/material";
 import { getInventarioActual } from "../../api/InventarioApi";
-import TablaLista from "../../components/TablaLista"; // Tu componente TablaLista
+import TablaLista from "../../components/TablaLista";
 
 function ListaInventario() {
   const navigate = useNavigate();
 
-  // 1. Cargar los datos
   const { data: response, isLoading, refetch } = useQuery({
     queryKey: ["inventarioActual"],
     queryFn: getInventarioActual,
@@ -21,17 +16,21 @@ function ListaInventario() {
     select: (response) => response.data,
   });
 
-  // 2. Procesar los datos (para formatear la fecha)
   const inventarioProcesado = useMemo(() => {
     if (!response) return [];
-    return response.map(inv => ({
-      ...inv,
-      // Formateamos la fecha/hora
-      ultimaActualizacionFormateada: format(new Date(inv.ultimaActualizacion), "dd/MM/yyyy HH:mm:ss")
-    }));
+    return response.map(inv => {
+      const fechaStr = inv.ultimaActualizacion;
+      if (!fechaStr) return { ...inv, ultimaActualizacionFormateada: '-' };
+
+      const fechaUTC = fechaStr.endsWith('Z') ? fechaStr : fechaStr + 'Z';
+
+      return {
+        ...inv,
+        ultimaActualizacionFormateada: format(new Date(fechaUTC), "dd/MM/yyyy HH:mm:ss")
+      };
+    });
   }, [response]);
 
-  // 3. Definir las 5 columnas que pediste
   const columns = [
     { field: "idInventario", headerName: "ID", width: 80 },
     { field: "skuProducto", headerName: "SKU", width: 120 },
@@ -59,17 +58,16 @@ function ListaInventario() {
     }
   ];
 
-  // 4. Renderizar la tabla
   return (
     <TablaLista
       title="Lista de Inventario (Stock Actual)"
       columns={columns}
       data={inventarioProcesado}
       isLoading={isLoading}
-      onBack={() => navigate("/dashboard-inventario")} // Botón "Volver"
-      onRefresh={refetch} // Botón para refrescar
+      onBack={() => navigate("/dashboard-inventario")}
+      onRefresh={refetch}
       getRowId={(row) => row.idInventario}
-      showAddButton={false} // No se puede "Añadir" stock desde aquí
+      showAddButton={false}
     />
   );
 }

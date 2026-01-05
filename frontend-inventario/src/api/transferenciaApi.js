@@ -8,8 +8,8 @@ export const aprobarTransferencia = (id) =>
 export const rechazarTransferencia = (id, motivo) =>
   axiosInstance.put(`/transferencia/${id}/rechazar`, { motivo });
 export const listarHistorial = () => {
-  return axios.get("/transferencia/historial");
+  return axiosInstance.get("/transferencia/historial");
 };
 export const obtenerTransferenciaPorId = (id) => {
-  return axios.get(`/transferencia/${id}`);
+  return axiosInstance.get(`/transferencia/${id}`);
 };

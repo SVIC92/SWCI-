@@ -13,7 +13,6 @@ import {
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 
-// Importa tus APIs
 import { getSedes } from '../../api/sedeApi';
 import { getProductos } from '../../api/productoApi';
 import { solicitarTransferencia } from '../../api/transferenciaApi';
@@ -22,11 +21,9 @@ import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 const SolicitarTransferencia = () => {
     const navigate = useNavigate();
 
-    // --- ESTADOS ---
     const [sedes, setSedes] = useState([]);
     const [productos, setProductos] = useState([]);
 
-    // Datos del formulario
     const [cabecera, setCabecera] = useState({
         sedeOrigen: '',
         sedeDestino: ''
@@ -39,7 +36,6 @@ const SolicitarTransferencia = () => {
 
     const [listaProductos, setListaProductos] = useState([]);
 
-    // --- CARGA INICIAL ---
     useEffect(() => {
         const cargarDatos = async () => {
             try {
@@ -48,8 +44,6 @@ const SolicitarTransferencia = () => {
                     getProductos()
                 ]);
 
-                // CORRECCIÓN: Validación robusta para evitar el error .map
-                // Detecta si la API devuelve el array directo o un objeto con .data
                 const listaSedes = Array.isArray(resSedes) ? resSedes : (resSedes?.data || []);
                 const listaProductos = Array.isArray(resProductos) ? resProductos : (resProductos?.data || []);
 
@@ -66,8 +60,6 @@ const SolicitarTransferencia = () => {
         cargarDatos();
     }, []);
 
-    // --- HANDLERS ---
-
     const handleCabeceraChange = (e) => {
         setCabecera({ ...cabecera, [e.target.name]: e.target.value });
     };
@@ -77,7 +69,6 @@ const SolicitarTransferencia = () => {
     };
 
     const agregarAlCarrito = () => {
-        // Validaciones básicas
         if (!itemActual.productoId) {
             Swal.fire('Atención', 'Selecciona un producto', 'warning');
             return;
@@ -87,25 +78,22 @@ const SolicitarTransferencia = () => {
             return;
         }
 
-        // Verificar duplicados
         if (listaProductos.find(item => item.productoId === itemActual.productoId)) {
             Swal.fire('Duplicado', 'Este producto ya está en la lista', 'info');
             return;
         }
 
-        // CORRECCIÓN: Usar 'id_producto' según tu modelo Java
         const productoInfo = productos.find(p => p.id_producto === itemActual.productoId) || {};
 
         const nuevoItem = {
             productoId: itemActual.productoId,
             nombre: productoInfo.nombre || 'Desconocido',
-            // CORRECCIÓN: Usar 'sku' ya que 'codigo' no existe en tu modelo
             codigo: productoInfo.sku || '---',
             cantidad: parseInt(itemActual.cantidad)
         };
 
         setListaProductos([...listaProductos, nuevoItem]);
-        setItemActual({ productoId: '', cantidad: '' }); // Limpiar inputs de item
+        setItemActual({ productoId: '', cantidad: '' });
     };
 
     const eliminarDelCarrito = (index) => {
@@ -114,7 +102,6 @@ const SolicitarTransferencia = () => {
     };
 
     const enviarSolicitud = async () => {
-        // Validaciones Finales
         if (!cabecera.sedeOrigen || !cabecera.sedeDestino) {
             Swal.fire('Faltan Datos', 'Selecciona la Sede de Origen y Destino', 'warning');
             return;
@@ -128,7 +115,6 @@ const SolicitarTransferencia = () => {
             return;
         }
 
-        // Armar Payload
         const payload = {
             sedeOrigenId: cabecera.sedeOrigen,
             sedeDestinoId: cabecera.sedeDestino,
@@ -148,8 +134,7 @@ const SolicitarTransferencia = () => {
                 confirmButtonText: 'Ir al Historial'
             });
 
-            // Redirigir a la gestión
-            navigate('/inventario/transferencias/gestion');
+            navigate('/inventario/transferencia/gestion');
 
         } catch (error) {
             console.error(error);
@@ -157,7 +142,6 @@ const SolicitarTransferencia = () => {
         }
     };
 
-    // --- RENDER ---
     return (
         <>
             <LayoutDashboard>
@@ -172,7 +156,6 @@ const SolicitarTransferencia = () => {
 
                         <Divider sx={{ mb: 3 }} />
 
-                        {/* SECCIÓN 1: CABECERA (SEDES) */}
                         <Card variant="outlined" sx={{ mb: 3, bgcolor: '#f9f9f9' }}>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom color="textSecondary">
@@ -217,7 +200,6 @@ const SolicitarTransferencia = () => {
                             </CardContent>
                         </Card>
 
-                        {/* SECCIÓN 2: AGREGAR PRODUCTOS */}
                         <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
                             <Grid item xs={12} md={6}>
                                 <TextField
@@ -230,7 +212,6 @@ const SolicitarTransferencia = () => {
                                     size="small"
                                 >
                                     {productos.map((prod) => (
-                                        // CORRECCIÓN: Usar 'id_producto' y 'sku'
                                         <MenuItem key={prod.id_producto} value={prod.id_producto}>
                                             {prod.sku} - {prod.nombre}
                                         </MenuItem>
@@ -262,7 +243,6 @@ const SolicitarTransferencia = () => {
                             </Grid>
                         </Grid>
 
-                        {/* TABLA DE ITEMS */}
                         <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
                             <Table size="small">
                                 <TableHead sx={{ bgcolor: '#eee' }}>
@@ -302,7 +282,6 @@ const SolicitarTransferencia = () => {
                             </Table>
                         </TableContainer>
 
-                        {/* BOTÓN FINAL */}
                         <Box display="flex" justifyContent="flex-end">
                             <Button
                                 variant="contained"

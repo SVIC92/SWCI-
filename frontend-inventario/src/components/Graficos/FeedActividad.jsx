@@ -22,10 +22,13 @@ const FeedActividad = () => {
     const actividades = actividadesData || [];
 
     const formatRelativeTime = (fecha) => {
-        const now = new Date();
-        const activityDate = new Date(fecha);
-        const diffInSeconds = Math.floor((now - activityDate) / 1000);
+        if (!fecha) return '';
 
+        const now = new Date();
+        const fechaUTC = fecha.endsWith('Z') ? fecha : fecha + 'Z';
+        const activityDate = new Date(fechaUTC);
+        const diffInSeconds = Math.floor((now - activityDate) / 1000);
+        if (diffInSeconds < 0) return 'hace unos instantes';
         if (diffInSeconds < 60) return `hace ${diffInSeconds} seg`;
         const diffInMinutes = Math.floor(diffInSeconds / 60);
         if (diffInMinutes < 60) return `hace ${diffInMinutes} min`;
