@@ -4,6 +4,7 @@ import GraficoUsuariosPorRol from "../../Graficos/GraficoUsuariosPorRol"
 import FeedActividad from "../../Graficos/FeedActividad";
 import "../../styles/dashboardAdmin.css";
 import WidgetReabastecimiento from "../../Graficos/WidgetReabastecimiento";
+import ChatWidget from "../../IA/ChatWidget";
 
 export default function DashboardAdmin() {
   return (
@@ -36,6 +37,7 @@ export default function DashboardAdmin() {
               <div className="grid-item-large">
                   <FeedActividad />
               </div>
+                <ChatWidget />
           </div>
       </div>
     </LayoutDashboard>
