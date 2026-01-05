@@ -57,7 +57,7 @@ import Settings from "./pages/Mod. Configuracion/Settings";
 
 import ListaMovimientos from "./pages/Mod. Inventario/ListaMovimientos";
 
-
+import ChatIA from "./pages/IA/ChatIA";
 // --- Roles ---
 const ROLES = {
   ADMIN: "Administrador",
@@ -337,6 +337,14 @@ const RutasInventario = [
     SolicitarTransferencia
   ),
 ];
+const RutasIA = [
+  RutaProtegida(
+    "chatIA",
+    "/chat-ia",
+    ADMIN_JEFE,
+    ChatIA
+  ),
+];
 
 const AppRoutes = [
   ...RutasAutenticacion,
@@ -349,6 +357,7 @@ const AppRoutes = [
   ...RutasInventario,
   ...RutasConteoInventario,
   ...RutasReportes,
+  ...RutasIA,
 ];
 
 export default AppRoutes;

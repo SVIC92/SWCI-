@@ -10,7 +10,8 @@ import {
     Cancel as CancelIcon,
     Info as InfoIcon,
     Visibility as VisibilityIcon,
-    AddCircleOutline as AddIcon
+    AddCircleOutline as AddIcon,
+    ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
@@ -136,6 +137,11 @@ const GestionTransferencias = () => {
                 <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Tooltip title="Volver">
+                            <IconButton onClick={() => navigate(-1)} color="primary">
+                                <ArrowBackIcon />
+                            </IconButton>
+                        </Tooltip>
                         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                             Gestión de Transferencias
                         </Typography>

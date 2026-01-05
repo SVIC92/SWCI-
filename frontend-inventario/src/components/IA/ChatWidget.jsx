@@ -8,20 +8,22 @@ import {
     Fab,
     Avatar,
     CircularProgress,
-    Collapse
+    Collapse,
+    useTheme // 1. Importamos el hook del tema
 } from '@mui/material';
 import {
     Send as SendIcon,
     Close as CloseIcon,
     Chat as ChatIcon,
-    SmartToy as BotIcon,
-    Person as PersonIcon
+    SmartToy as BotIcon
 } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+// Usamos un estilo que se vea bien en ambos modos
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const ChatWidget = () => {
+    const theme = useTheme(); // 2. Accedemos a las variables del tema (colores)
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +32,7 @@ const ChatWidget = () => {
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: "¡Hola! Soy tu asistente virtual. \n\nPuedo responder preguntas y escribir código. Ej: *'Escribe un Hello World en Java'*.",
+            text: "¡Hola! Soy tu asistente de inventarios virtual. \n\nPuedo responder preguntas sobre inventarios y escribir código. Ej: *'Escribe un Hello World en Java'*.",
             sender: 'bot'
         }
     ]);
@@ -56,27 +58,29 @@ const ChatWidget = () => {
         const messageToSend = input; // Guardamos el texto
         setInput('');
         setIsLoading(true);
-        const API_URL = "https://swci-backend.onrender.com" || 'http://localhost:8080';
+
+        // Ajuste de URL para local o producción
+        const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        const API_URL = isLocal ? "http://localhost:8080" : "https://swci-backend.onrender.com";
 
         try {
             const response = await fetch(`${API_URL}/api/chat-gerente`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'text/plain', // Importante: enviamos texto plano
+                    'Content-Type': 'text/plain',
                 },
-                body: messageToSend, // Enviamos el string directo
+                body: messageToSend,
             });
 
             if (!response.ok) {
                 throw new Error(`Error del servidor: ${response.status}`);
             }
 
-            // 3. Leer respuesta como TEXTO (no JSON)
             const dataText = await response.text();
 
             const botResponse = {
                 id: Date.now() + 1,
-                text: dataText, // La IA devuelve texto markdown directo
+                text: dataText,
                 sender: 'bot'
             };
 
@@ -116,7 +120,9 @@ const ChatWidget = () => {
                         flexDirection: 'column',
                         overflow: 'hidden',
                         borderRadius: 3,
-                        border: '1px solid #e0e0e0'
+                        // 3. Bordes y Fondos adaptables
+                        border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.12)' : '1px solid #e0e0e0',
+                        bgcolor: 'background.paper'
                     }}
                 >
                     {/* Header */}
@@ -124,21 +130,21 @@ const ChatWidget = () => {
                         sx={{
                             p: 2,
                             bgcolor: 'primary.main',
-                            color: 'white',
+                            color: 'primary.contrastText',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar sx={{ bgcolor: 'white', color: 'primary.main', width: 32, height: 32 }}>
+                            <Avatar sx={{ bgcolor: 'background.paper', color: 'primary.main', width: 32, height: 32 }}>
                                 <BotIcon fontSize="small" />
                             </Avatar>
-                            <Typography variant="subtitle1" fontWeight="bold">
+                            <Typography variant="subtitle1" fontWeight="bold" color="inherit">
                                 Asistente IA
                             </Typography>
                         </Box>
-                        <IconButton size="small" onClick={handleToggle} sx={{ color: 'white' }}>
+                        <IconButton size="small" onClick={handleToggle} sx={{ color: 'inherit' }}>
                             <CloseIcon />
                         </IconButton>
                     </Box>
@@ -149,7 +155,8 @@ const ChatWidget = () => {
                             flex: 1,
                             p: 2,
                             overflowY: 'auto',
-                            bgcolor: '#f5f5f5',
+                            // 4. Fondo grisáceo en claro, oscuro en dark mode
+                            bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#f5f5f5',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: 2
@@ -168,12 +175,18 @@ const ChatWidget = () => {
                                         maxWidth: '85%',
                                         p: 1.5,
                                         borderRadius: 2,
-                                        bgcolor: msg.sender === 'user' ? 'primary.main' : 'white',
-                                        color: msg.sender === 'user' ? 'white' : 'text.primary',
+                                        // 5. Colores de burbujas dinámicos
+                                        bgcolor: msg.sender === 'user' ? 'primary.main' : 'background.paper',
+                                        color: msg.sender === 'user' ? 'primary.contrastText' : 'text.primary',
                                         boxShadow: 1,
+                                        // Borde sutil para el bot en modo oscuro
+                                        border: (theme.palette.mode === 'dark' && msg.sender === 'bot')
+                                            ? '1px solid rgba(255,255,255,0.12)'
+                                            : 'none',
+
                                         // Estilos específicos para el renderizado de Markdown
                                         '& p': { m: 0 },
-                                        '& pre': { m: 0, p: 0, borderRadius: 1, overflow: 'hidden' }
+                                        '& pre': { m: 0, p: 0, borderRadius: 1, overflow: 'hidden', mt: 1 }
                                     }}
                                 >
                                     {msg.sender === 'user' ? (
@@ -186,7 +199,7 @@ const ChatWidget = () => {
                                                     const match = /language-(\w+)/.exec(className || '');
                                                     return !inline && match ? (
                                                         <SyntaxHighlighter
-                                                            style={materialDark}
+                                                            style={vscDarkPlus}
                                                             language={match[1]}
                                                             PreTag="div"
                                                             {...props}
@@ -194,7 +207,11 @@ const ChatWidget = () => {
                                                             {String(children).replace(/\n$/, '')}
                                                         </SyntaxHighlighter>
                                                     ) : (
-                                                        <code className={className} {...props} style={{ backgroundColor: '#eee', padding: '2px 4px', borderRadius: '4px' }}>
+                                                        <code className={className} {...props} style={{
+                                                            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                                                            padding: '2px 4px',
+                                                            borderRadius: '4px'
+                                                        }}>
                                                             {children}
                                                         </code>
                                                     );
@@ -211,7 +228,7 @@ const ChatWidget = () => {
                         {/* Indicador de "Escribiendo..." */}
                         {isLoading && (
                             <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, boxShadow: 1 }}>
+                                <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1 }}>
                                     <CircularProgress size={20} />
                                 </Box>
                             </Box>
@@ -220,7 +237,11 @@ const ChatWidget = () => {
                     </Box>
 
                     {/* Área de Input */}
-                    <Box sx={{ p: 2, bgcolor: 'white', borderTop: '1px solid #eee' }}>
+                    <Box sx={{
+                        p: 2,
+                        bgcolor: 'background.paper',
+                        borderTop: `1px solid ${theme.palette.divider}`
+                    }}>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             <TextField
                                 fullWidth
@@ -234,14 +255,29 @@ const ChatWidget = () => {
                                 multiline
                                 maxRows={3}
                                 sx={{
-                                    '& .MuiOutlinedInput-root': { borderRadius: 3 }
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 3,
+                                        // Fondo del input adaptable
+                                        bgcolor: theme.palette.mode === 'dark' ? 'background.default' : 'white'
+                                    }
                                 }}
                             />
                             <IconButton
                                 color="primary"
                                 onClick={handleSend}
                                 disabled={!input.trim() || isLoading}
-                                sx={{ bgcolor: 'primary.light', color: 'white', '&:hover': { bgcolor: 'primary.main' }, width: 40, height: 40 }}
+                                sx={{
+                                    bgcolor: 'primary.light',
+                                    color: 'white',
+                                    '&:hover': { bgcolor: 'primary.main' },
+                                    width: 40,
+                                    height: 40,
+                                    // Deshabilitado visualmente correcto en dark mode
+                                    '&.Mui-disabled': {
+                                        bgcolor: theme.palette.action.disabledBackground,
+                                        color: theme.palette.action.disabled
+                                    }
+                                }}
                             >
                                 <SendIcon fontSize="small" />
                             </IconButton>
@@ -255,7 +291,7 @@ const ChatWidget = () => {
                 color="primary"
                 aria-label="chat"
                 onClick={handleToggle}
-                sx={{ float: 'right' }}
+                sx={{ float: 'right', mb: 10 }}
             >
                 {isOpen ? <CloseIcon /> : <ChatIcon />}
             </Fab>

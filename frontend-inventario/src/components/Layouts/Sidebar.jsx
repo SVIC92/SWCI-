@@ -11,7 +11,7 @@ import {
 import {
   FaUsers, FaBoxes, FaChartBar, FaCog, FaBars, FaSignOutAlt,
   FaTags, FaStore, FaClipboardList, FaTruck, FaHome,
-  FaChevronLeft
+  FaChevronLeft, FaRobot,
 } from "react-icons/fa";
 
 const SIDEBAR_WIDTH = 250;
@@ -20,6 +20,7 @@ const getMenuItems = (rol) => {
   const allMenus = {
     "Administrador": [
       { icon: <FaHome />, label: "Inicio", path: "/dashboard-administrador" },
+      { icon: <FaRobot />, label: "IA", path: "/chat-ia" },
       { icon: <FaUsers />, label: "Usuarios", path: "/dashboard-usuarios" },
       { icon: <FaTags />, label: "Productos", path: "/dashboard-productos" },
       { icon: <FaStore />, label: "Sedes", path: "/dashboard-sedes" },
@@ -30,6 +31,7 @@ const getMenuItems = (rol) => {
     ],
     "Jefe de Inventario": [
       { icon: <FaHome />, label: "Inicio", path: "/dashboard-jefe-inventario" },
+      { icon: <FaRobot />, label: "IA", path: "/chat-ia" },
       { icon: <FaTags />, label: "Productos", path: "/dashboard-productos" },
       { icon: <FaStore />, label: "Sedes", path: "/dashboard-sedes" },
       { icon: <FaBoxes />, label: "Inventario", path: "/dashboard-inventario" },

@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import {
     Container, Paper, Typography, Grid, TextField, MenuItem, Button,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    IconButton, Card, CardContent, Divider, Box, Tooltip
+    IconButton, Card, CardContent, Divider, Box, Tooltip,
+    useTheme
 } from '@mui/material';
 import {
     AddCircle as AddIcon,
     Delete as DeleteIcon,
     Send as SendIcon,
-    Inventory as InventoryIcon
+    Inventory as InventoryIcon,
+    ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +21,7 @@ import { solicitarTransferencia } from '../../api/transferenciaApi';
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 
 const SolicitarTransferencia = () => {
+    const theme = useTheme();
     const navigate = useNavigate();
 
     const [sedes, setSedes] = useState([]);
@@ -143,162 +146,195 @@ const SolicitarTransferencia = () => {
     };
 
     return (
-        <>
-            <LayoutDashboard>
-                <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-                    <Paper elevation={3} sx={{ p: 4 }}>
-                        <Box display="flex" alignItems="center" mb={3}>
-                            <InventoryIcon color="primary" sx={{ fontSize: 40, mr: 2 }} />
-                            <Typography variant="h4" component="h1" color="primary" fontWeight="bold">
-                                Nueva Transferencia
+        <LayoutDashboard>
+            <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+                <Paper
+                    elevation={3}
+                    sx={{
+                        p: 4,
+                        bgcolor: 'background.paper',
+                        borderRadius: 2
+                    }}
+                >
+                    <Box display="flex" alignItems="center" mb={3}>
+                        <Tooltip title="Volver">
+                            <IconButton
+                                onClick={() => navigate("/dashboard-sedes")}
+                                sx={{ mr: 2, color: 'text.secondary' }}
+                            >
+                                <ArrowBackIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <InventoryIcon color="primary" sx={{ fontSize: 40, mr: 2 }} />
+                        <Typography variant="h4" component="h1" color="primary" fontWeight="bold">
+                            Nueva Transferencia
+                        </Typography>
+                    </Box>
+
+                    <Divider sx={{ mb: 3 }} />
+
+                    <Card
+                        variant="outlined"
+                        sx={{
+                            mb: 3,
+                            bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#f9f9f9'
+                        }}
+                    >
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom color="textSecondary">
+                                Datos de Traslado
                             </Typography>
-                        </Box>
-
-                        <Divider sx={{ mb: 3 }} />
-
-                        <Card variant="outlined" sx={{ mb: 3, bgcolor: '#f9f9f9' }}>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom color="textSecondary">
-                                    Datos de Traslado
-                                </Typography>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} md={6}>
-                                        <TextField
-                                            select
-                                            fullWidth
-                                            label="Sede Origen (Desde)"
-                                            name="sedeOrigen"
-                                            value={cabecera.sedeOrigen}
-                                            onChange={handleCabeceraChange}
-                                            variant="outlined"
-                                        >
-                                            {sedes.map((sede) => (
-                                                <MenuItem key={sede.idSede} value={sede.idSede}>
-                                                    {sede.nombreSede}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </Grid>
-                                    <Grid item xs={12} md={6}>
-                                        <TextField
-                                            select
-                                            fullWidth
-                                            label="Sede Destino (Hacia)"
-                                            name="sedeDestino"
-                                            value={cabecera.sedeDestino}
-                                            onChange={handleCabeceraChange}
-                                            variant="outlined"
-                                        >
-                                            {sedes.map((sede) => (
-                                                <MenuItem key={sede.idSede} value={sede.idSede}>
-                                                    {sede.nombreSede}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </Grid>
+                            {/* CAMBIO: Grid container con full width */}
+                            <Grid container spacing={2}>
+                                {/* Sede Origen: xs=12 para que ocupe toda la fila */}
+                                <Grid item xs={12}>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Sede Origen (Desde)"
+                                        name="sedeOrigen"
+                                        value={cabecera.sedeOrigen}
+                                        onChange={handleCabeceraChange}
+                                        variant="outlined"
+                                        // Forzamos un minWidth para evitar el colapso visual
+                                        sx={{ minWidth: 200 }}
+                                    >
+                                        {sedes.map((sede) => (
+                                            <MenuItem key={sede.idSede} value={sede.idSede}>
+                                                {sede.nombreSede}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
                                 </Grid>
-                            </CardContent>
-                        </Card>
+                                {/* Sede Destino: xs=12 para que ocupe toda la fila */}
+                                <Grid item xs={12}>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label="Sede Destino (Hacia)"
+                                        name="sedeDestino"
+                                        value={cabecera.sedeDestino}
+                                        onChange={handleCabeceraChange}
+                                        variant="outlined"
+                                        sx={{ minWidth: 200 }}
+                                    >
+                                        {sedes.map((sede) => (
+                                            <MenuItem key={sede.idSede} value={sede.idSede}>
+                                                {sede.nombreSede}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                </Grid>
+                            </Grid>
+                        </CardContent>
+                    </Card>
 
-                        <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                            <Grid item xs={12} md={6}>
-                                <TextField
-                                    select
-                                    fullWidth
-                                    label="Seleccionar Producto"
-                                    name="productoId"
-                                    value={itemActual.productoId}
-                                    onChange={handleItemChange}
-                                    size="small"
-                                >
-                                    {productos.map((prod) => (
-                                        <MenuItem key={prod.id_producto} value={prod.id_producto}>
-                                            {prod.sku} - {prod.nombre}
-                                        </MenuItem>
-                                    ))}
-                                </TextField>
-                            </Grid>
-                            <Grid item xs={6} md={3}>
-                                <TextField
-                                    type="number"
-                                    fullWidth
-                                    label="Cantidad"
-                                    name="cantidad"
-                                    value={itemActual.cantidad}
-                                    onChange={handleItemChange}
-                                    size="small"
-                                    inputProps={{ min: 1 }}
-                                />
-                            </Grid>
-                            <Grid item xs={6} md={3}>
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    fullWidth
-                                    startIcon={<AddIcon />}
-                                    onClick={agregarAlCarrito}
-                                >
-                                    Agregar
-                                </Button>
-                            </Grid>
+                    {/* Fila de Selección de Producto */}
+                    <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                select
+                                fullWidth
+                                label="Seleccionar Producto"
+                                name="productoId"
+                                value={itemActual.productoId}
+                                onChange={handleItemChange}
+                                size="small"
+                                // Esto arregla el problema de la "caja diminuta"
+                                sx={{ minWidth: 200 }}
+                            >
+                                {productos.map((prod) => (
+                                    <MenuItem key={prod.id_producto} value={prod.id_producto}>
+                                        {prod.sku} - {prod.nombre}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
                         </Grid>
-
-                        <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
-                            <Table size="small">
-                                <TableHead sx={{ bgcolor: '#eee' }}>
-                                    <TableRow>
-                                        <TableCell><strong>Producto</strong></TableCell>
-                                        <TableCell><strong>SKU</strong></TableCell>
-                                        <TableCell align="center"><strong>Cantidad</strong></TableCell>
-                                        <TableCell align="center"><strong>Acción</strong></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {listaProductos.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-                                                <Typography variant="body2" color="textSecondary">
-                                                    No hay productos agregados.
-                                                </Typography>
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        listaProductos.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell>{item.nombre}</TableCell>
-                                                <TableCell>{item.codigo}</TableCell>
-                                                <TableCell align="center">{item.cantidad}</TableCell>
-                                                <TableCell align="center">
-                                                    <Tooltip title="Eliminar">
-                                                        <IconButton size="small" color="error" onClick={() => eliminarDelCarrito(index)}>
-                                                            <DeleteIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-
-                        <Box display="flex" justifyContent="flex-end">
+                        <Grid item xs={6} md={3}>
+                            <TextField
+                                type="number"
+                                fullWidth
+                                label="Cantidad"
+                                name="cantidad"
+                                value={itemActual.cantidad}
+                                onChange={handleItemChange}
+                                size="small"
+                                inputProps={{ min: 1 }}
+                            />
+                        </Grid>
+                        <Grid item xs={6} md={3}>
                             <Button
                                 variant="contained"
-                                color="primary"
-                                size="large"
-                                startIcon={<SendIcon />}
-                                onClick={enviarSolicitud}
-                                disabled={listaProductos.length === 0}
+                                color="secondary"
+                                fullWidth
+                                startIcon={<AddIcon />}
+                                onClick={agregarAlCarrito}
+                                sx={{ height: 40 }} // Altura fija para alinear con inputs
                             >
-                                Confirmar Solicitud
+                                Agregar
                             </Button>
-                        </Box>
+                        </Grid>
+                    </Grid>
 
-                    </Paper>
-                </Container>
-            </LayoutDashboard>
-        </>
+                    <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
+                        <Table size="small">
+                            <TableHead sx={{
+                                bgcolor: theme.palette.mode === 'dark'
+                                    ? 'rgba(255, 255, 255, 0.05)'
+                                    : '#eee'
+                            }}>
+                                <TableRow>
+                                    <TableCell><strong>Producto</strong></TableCell>
+                                    <TableCell><strong>SKU</strong></TableCell>
+                                    <TableCell align="center"><strong>Cantidad</strong></TableCell>
+                                    <TableCell align="center"><strong>Acción</strong></TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {listaProductos.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} align="center" sx={{ py: 3 }}>
+                                            <Typography variant="body2" color="textSecondary">
+                                                No hay productos agregados.
+                                            </Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    listaProductos.map((item, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{item.nombre}</TableCell>
+                                            <TableCell>{item.codigo}</TableCell>
+                                            <TableCell align="center">{item.cantidad}</TableCell>
+                                            <TableCell align="center">
+                                                <Tooltip title="Eliminar">
+                                                    <IconButton size="small" color="error" onClick={() => eliminarDelCarrito(index)}>
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+
+                    <Box display="flex" justifyContent="flex-end">
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            startIcon={<SendIcon />}
+                            onClick={enviarSolicitud}
+                            disabled={listaProductos.length === 0}
+                        >
+                            Confirmar Solicitud
+                        </Button>
+                    </Box>
+
+                </Paper>
+            </Container>
+        </LayoutDashboard>
     );
 };
 
