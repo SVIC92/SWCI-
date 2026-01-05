@@ -44,7 +44,8 @@ public class SecurityConfig {
                 "/api/auth/mfa/login-verify",
                 "/ws/**"
             ).permitAll()
-                .anyRequest().authenticated()                 
+                .requestMatchers("/api/chat-gerente").authenticated()
+                .anyRequest().authenticated()           
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
