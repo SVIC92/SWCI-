@@ -36,7 +36,7 @@ const DashboardProductos = () => {
             id: "campañas-promocionales",
             titulo: "Campañas Promocionales",
             descripcion: "Verifica que campañas se acercan para promocionar productos.",
-            ruta: "/....",
+            ruta: "/productos/campanias-festivas",
         },
         {
             id: "sugerencia-productos",

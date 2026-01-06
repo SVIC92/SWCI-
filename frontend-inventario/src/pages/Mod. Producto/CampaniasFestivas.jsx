@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getCampaniasActivas, guardarCampania, asignarProductosACampania/*, eliminarCampania */ } from '../../../api/campaniaApi';
+import { getCampaniasActivas, guardarCampania, asignarProductosACampania/*, eliminarCampania */ } from '../../api/campaniaApi';
+import { getProductos } from '../../api/productoApi';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 import Swal from 'sweetalert2';
-import { FaGift, FaClock, FaCalendarAlt, FaBullhorn, FaPlus, FaEdit, FaTrash, FaImage } from 'react-icons/fa';
-import './CampaniasFestivas.css';
+import { FaGift, FaClock, FaCalendarAlt, FaBullhorn, FaPlus, FaEdit, FaTrash, FaImage, FaSearch, FaCheckSquare, FaSquare } from 'react-icons/fa';
+import '../../components/styles/CampaniaFestivas.css';
 
 export default function CampaniasFestivas() {
     const [campanias, setCampanias] = useState([]);
@@ -233,7 +234,7 @@ export default function CampaniasFestivas() {
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
                                 <label>Nombre de la Campaña</label>
-                                <input type="text" name="nombre" value={form.nombreCampania} onChange={handleChange} required placeholder="Ej: Navidad 2025" />
+                                <input type="text" name="nombreCampania" value={form.nombreCampania} onChange={handleChange} required placeholder="Ej: Navidad 2025" />
                             </div>
 
                             <div className="form-row">
