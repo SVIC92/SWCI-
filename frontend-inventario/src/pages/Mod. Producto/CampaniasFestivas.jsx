@@ -50,7 +50,7 @@ export default function CampaniasFestivas() {
 
     // --- WebSocket y Carga de Datos (Igual que antes) ---
     const conectarWebSocket = () => {
-        const socket = new SockJS("https://swci-backend.onrender.com/ws");
+        const socket = new SockJS("https://swci-backend.onrender.com");
         const stompClient = Stomp.over(socket);
         stompClient.debug = () => { };
         stompClient.connect({}, () => {
