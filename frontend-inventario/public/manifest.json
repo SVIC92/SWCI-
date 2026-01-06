@@ -26,7 +26,8 @@
       "src": "imagen-marca.jpg",
       "type": "image/jpeg",
       "sizes": "810x458"
-    }
+    },
+    {"src": "BannerNavidad.png", "type": "image/png", "sizes": "900x217"}
   ],
   "start_url": ".",
   "display": "standalone",
