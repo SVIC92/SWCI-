@@ -1,0 +1,68 @@
+.dashboard-admin-container {
+    padding: 20px;
+}
+/*Comentarios para entender*/
+.dashboard-grid {
+    display: grid;
+    gap: 20px;
+
+    /* Esto crea 4 columnas iguales.
+      Los 4 KPIs de arriba ocupan 1 columna cada uno (1+1+1+1 = 4).
+      Los 2 widgets de abajo ocupan 2 columnas cada uno (2+2 = 4).
+      Esto los alinea perfectamente.
+    */
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Las tarjetas KPI ocupan 1 columna */
+.grid-item-kpi {
+    grid-column: span 1;
+}
+
+/* Los widgets grandes (gráfico y feed) ocupan 2 columnas */
+.grid-item-large {
+    grid-column: span 2;
+    min-height: 400px;
+}
+
+/* --- ESTILOS DE TARJETA GENÉRICA --- */
+/* (Esto lo puse en FeedActividad.css, pero puedes ponerlo aquí 
+   para que el gráfico también tenga fondo blanco) */
+.card-widget {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--surface-border);
+    height: 100%;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* --- RESPONSIVIDAD (IMPORTANTE) --- */
+
+/* Para tablets o pantallas medianas */
+@media (max-width: 1200px) {
+    .dashboard-grid {
+        /* Pasa a 2 columnas */
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* El gráfico y el feed ahora ocupan 1 columna cada uno */
+    .grid-item-large {
+        grid-column: span 1;
+    }
+}
+
+/* Para celulares */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        /* Pasa a 1 sola columna */
+        grid-template-columns: 1fr;
+    }
+
+    /* Todos los items ocupan 1 columna (se apilan verticalmente) */
+    .grid-item-kpi,
+    .grid-item-large {
+        grid-column: span 1;
+    }
+}

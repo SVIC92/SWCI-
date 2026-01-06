@@ -1,0 +1,102 @@
+.swal2-popup {
+  background: var(--swal-bg) !important;
+  color: var(--swal-text) !important;
+  border-radius: 18px !important;
+  border: 1px solid var(--swal-border) !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35) !important;
+}
+
+.swal2-title {
+  color: var(--swal-title) !important;
+  font-weight: 700 !important;
+  font-size: 1.5em !important;
+}
+
+.swal2-html-container {
+  color: var(--swal-text) !important;
+  font-size: 1em !important;
+}
+
+.swal2-html-container label {
+  color: var(--swal-title) !important;
+  font-weight: 600 !important;
+}
+
+.swal2-input,
+.swal2-select,
+.swal2-textarea,
+.swal-input,
+.swal-select,
+.swal-textarea {
+  background: var(--input-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--input-border) !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  box-shadow: none !important;
+}
+
+.swal2-input:focus,
+.swal2-select:focus,
+.swal2-textarea:focus,
+.swal-input:focus,
+.swal-select:focus,
+.swal-textarea:focus {
+  border-color: var(--primary-color) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+}
+
+.swal2-input::placeholder,
+.swal2-textarea::placeholder,
+.swal-input::placeholder,
+.swal-textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.swal2-actions {
+  gap: 14px !important;
+}
+
+.swal2-confirm {
+  background: var(--swal-button-confirm-bg) !important;
+  color: var(--swal-button-text) !important;
+  border-radius: 10px !important;
+  border: none !important;
+  padding: 10px 22px !important;
+  font-weight: 600 !important;
+  transition: background 0.2s ease !important;
+}
+
+.swal2-confirm:hover {
+  background: var(--swal-button-confirm-hover) !important;
+}
+
+.swal2-cancel {
+  background: var(--swal-button-cancel-bg) !important;
+  color: var(--swal-button-text) !important;
+  border-radius: 10px !important;
+  border: none !important;
+  padding: 10px 22px !important;
+  font-weight: 600 !important;
+  transition: background 0.2s ease !important;
+}
+
+.swal2-cancel:hover {
+  background: var(--swal-button-cancel-hover) !important;
+}
+
+.swal2-icon.swal2-warning {
+  color: var(--warning-color) !important;
+  border-color: var(--warning-color) !important;
+}
+
+.swal2-icon.swal2-success {
+  color: var(--success-color) !important;
+  border-color: var(--success-color) !important;
+}
+
+.swal2-icon.swal2-error {
+  color: var(--danger-color) !important;
+  border-color: var(--danger-color) !important;
+}
