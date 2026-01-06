@@ -32,7 +32,6 @@ public class Categoria implements Serializable {
     private Area area;
 
     @OneToMany(mappedBy = "categoria", fetch = FetchType.LAZY)
-    @JsonManagedReference("categoria-producto")
     private List<Producto> productos;
     
 }
