@@ -59,7 +59,7 @@ export default function CampaniasActivas() {
 
                 <div className="header-section">
                     <div className="header-info">
-                        <h3>🎁 Campañas Disponibles</h3>
+                        <h3>🎁 Campañas Activas y Proximas</h3>
                         <p>Aprovecha las promociones y eventos vigentes.</p>
                     </div>
                     <button
@@ -86,7 +86,7 @@ export default function CampaniasActivas() {
                             const estado = getEstadoVisual(campania.fechaInicio, campania.fechaFin);
 
                             return (
-                                <div key={campania.id} className={`campania-card ${estado.clase}`}>
+                                <div key={campania.id} className={`campania-card ${estado.clase}`} onClick={() => navigate(`/productos/campanias/${campania.id}`)} style={{ cursor: 'pointer' }}>
 
                                     <div className="card-image-header" style={{
                                         backgroundImage: `url(${campania.imagenUrl}), linear-gradient(135deg, #667eea 0%, #764ba2 100%)`

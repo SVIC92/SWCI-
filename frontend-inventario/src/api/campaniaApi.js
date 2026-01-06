@@ -20,6 +20,15 @@ export const getCampaniasActivas = async () => {
     throw error;
   }
 };
+export const obtenerCampaniaPorId = async (id) => {
+  try {
+    const response = await axiosInstance.get(`${ENDPOINT}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener la campaña:", error);
+    throw error;
+  }
+};
 export const crearCampania = async (campania) => {
   try {
     const response = await axiosInstance.post(ENDPOINT, campania);

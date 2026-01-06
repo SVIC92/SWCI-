@@ -30,6 +30,12 @@ public class CampaniaController {
         List<Campania> campanias = campaniaService.obtenerCampaniasRelevantes();
         return ResponseEntity.ok(campanias);
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<Campania> obtenerPorId(@PathVariable Integer id) {
+        return campaniaService.obtenerPorId(id)
+                .map(ResponseEntity::ok) 
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @PostMapping
     public ResponseEntity<?> crearCampania(@RequestBody Campania campania) {

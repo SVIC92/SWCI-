@@ -29,6 +29,7 @@ import DetalleProducto from "./pages/Mod. Producto/DetalleProducto";
 import GeneradorEtiquetas from "./pages/Mod. Producto/GeneradorEtiquetas";
 import CampaniasActivas from "./pages/Mod. Producto/CampaniasActivas";
 import CampaniasFestivas from "./pages/Mod. Producto/CampaniasFestivas";
+import DetalleCampania from "./pages/Mod. Producto/DetalleCampania";
 import SugerenciasReabastecimiento from "./components/SugerenciasReabastecimiento";
 import IngresarProducto from "./pages/Mod. Producto/IngresarProducto";
 import DashboardUsuarios from "./components/Dashboards/Modulos/dashboardUsuarios";
@@ -243,6 +244,12 @@ const RutasProductos = [
     "/productos/campanias-festivas",
     ADMIN_JEFE,
     CampaniasFestivas
+  ),
+  RutaProtegida(
+    "detalleCampania",
+    "/productos/campanias/:id",
+    ADMIN_JEFE,
+    DetalleCampania
   ),
   RutaProtegida(
     "sugerenciasReabastecimiento",

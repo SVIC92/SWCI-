@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom'; // <--- 1. Importar useNavigate
 import {
     obtenerTodasLasCampanias,
     crearCampania,
@@ -10,13 +11,14 @@ import { getProductos } from '../../api/productoApi';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 import Swal from 'sweetalert2';
-import { FaGift, FaClock, FaCalendarAlt, FaBullhorn, FaPlus, FaEdit, FaTrash, FaImage, FaSearch, FaCheckSquare, FaSquare } from 'react-icons/fa';
+import { FaGift, FaClock, FaCalendarAlt, FaBullhorn, FaPlus, FaEdit, FaTrash, FaImage, FaSearch, FaCheckSquare, FaSquare, FaArrowLeft } from 'react-icons/fa';
 import '../../components/styles/CampaniaFestivas.css';
 import { useTheme } from '@mui/material/styles';
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 
 export default function CampaniasFestivas() {
     const theme = useTheme();
+    const navigate = useNavigate(); // <--- 3. Inicializar el hook
     const isDarkMode = theme.palette.mode === 'dark';
     const [campanias, setCampanias] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
@@ -209,9 +211,19 @@ export default function CampaniasFestivas() {
                         <h3>🎉 Gestión de Campañas</h3>
                         <p>Administra eventos promocionales, descuentos y festividades.</p>
                     </div>
-                    <button className="btn-nueva-campania" onClick={() => abrirModal()}>
-                        <FaPlus /> Nueva Campaña
-                    </button>
+                    {/* Botonera de acciones */}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                            className="btn-nueva-campania"
+                            style={{ backgroundColor: '#6c757d', border: 'none' }}
+                            onClick={() => navigate(-1)}
+                        >
+                            <FaArrowLeft /> Volver
+                        </button>
+                        <button className="btn-nueva-campania" onClick={() => abrirModal()}>
+                            <FaPlus /> Nueva Campaña
+                        </button>
+                    </div>
                 </div>
 
                 {campanias.length === 0 ? (
@@ -223,7 +235,7 @@ export default function CampaniasFestivas() {
                             const estado = getEstadoVisual(campania.fechaInicio, campania.fechaFin);
 
                             return (
-                                <div key={campania.id} className={`campania-card ${estado.clase}`}>
+                                <div key={campania.id} className={`campania-card ${estado.clase}`} onClick={() => navigate(`/productos/campanias/${campania.id}`)} style={{ cursor: 'pointer' }}>
                                     <div className="card-image-header" style={{
                                         backgroundImage: `url(${campania.imagenUrl}), linear-gradient(135deg, #667eea 0%, #764ba2 100%)`
                                     }}>

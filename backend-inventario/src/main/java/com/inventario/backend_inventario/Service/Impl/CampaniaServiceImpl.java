@@ -34,6 +34,11 @@ public class CampaniaServiceImpl implements CampaniaService {
     }
 
     @Override
+    public Optional<Campania> obtenerPorId(Integer id) {
+        return campaniaRepository.findById(id);
+    }
+
+    @Override
     public Campania crear(Campania campania) {
         validarFechas(campania);
         Optional<Campania> campaniaExistente = campaniaRepository
