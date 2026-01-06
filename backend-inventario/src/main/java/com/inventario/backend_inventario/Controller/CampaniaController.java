@@ -13,53 +13,86 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/campanias")
-@CrossOrigin(origins = "*") // Ajusta según tu SecurityConfig si es necesario
+@CrossOrigin(origins = "*")
 public class CampaniaController {
 
     @Autowired
     private CampaniaService campaniaService;
 
-    /**
-     * Endpoint para listar campañas activas y futuras.
-     * GET /api/campanias/activas
-     */
+    @GetMapping
+    public ResponseEntity<List<Campania>> listarTodas() {
+        List<Campania> campanias = campaniaService.obtenerTodas();
+        return ResponseEntity.ok(campanias);
+    }
+
     @GetMapping("/activas")
     public ResponseEntity<List<Campania>> listarCampaniasActivas() {
         List<Campania> campanias = campaniaService.obtenerCampaniasRelevantes();
         return ResponseEntity.ok(campanias);
     }
 
-    /**
-     * Endpoint para CREAR o ACTUALIZAR una campaña.
-     * POST /api/campanias
-     */
     @PostMapping
-    public ResponseEntity<?> guardarCampania(@RequestBody Campania campania) {
+    public ResponseEntity<?> crearCampania(@RequestBody Campania campania) {
         try {
-            Campania nuevaCampania = campaniaService.guardar(campania);
+            Campania nuevaCampania = campaniaService.crear(campania);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaCampania);
-            
+
         } catch (IllegalArgumentException e) {
-            // Error de validación de fechas (400 Bad Request)
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-            
+
         } catch (ResourceConflictException e) {
-            // Error de nombre duplicado (409 Conflict)
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
-            
+
         } catch (Exception e) {
-            // Error general (500 Internal Server Error)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Error interno al guardar la campaña", "error", e.getMessage()));
+                    .body(Map.of("message", "Error interno al crear la campaña", "error", e.getMessage()));
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizarCampania(@PathVariable Integer id, @RequestBody Campania campania) {
+        try {
+            Campania campaniaActualizada = campaniaService.actualizar(id, campania);
+            return ResponseEntity.ok(campaniaActualizada);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+
+        } catch (ResourceConflictException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al actualizar la campaña", "error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminarCampania(@PathVariable Integer id) {
+        try {
+            campaniaService.eliminar(id);
+            return ResponseEntity.ok(Map.of("message", "Campaña eliminada correctamente"));
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Error al eliminar la campaña", "error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/{id}/productos")
     public ResponseEntity<?> asignarProductos(@PathVariable Integer id, @RequestBody List<Long> productoIds) {
         try {
             campaniaService.asignarProductos(id, productoIds);
             return ResponseEntity.ok(Map.of("message", "Productos asignados correctamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }
 }

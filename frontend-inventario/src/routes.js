@@ -27,6 +27,7 @@ import ListaAreas from "./pages/Mod. Producto/ListaAreas";
 import ListaProductos from "./pages/Mod. Producto/ListaProductos";
 import DetalleProducto from "./pages/Mod. Producto/DetalleProducto";
 import GeneradorEtiquetas from "./pages/Mod. Producto/GeneradorEtiquetas";
+import CampaniasActivas from "./pages/Mod. Producto/CampaniasActivas";
 import CampaniasFestivas from "./pages/Mod. Producto/CampaniasFestivas";
 import SugerenciasReabastecimiento from "./components/SugerenciasReabastecimiento";
 import IngresarProducto from "./pages/Mod. Producto/IngresarProducto";
@@ -230,6 +231,12 @@ const RutasProductos = [
     "/productos/etiquetas",
     ADMIN_JEFE,
     GeneradorEtiquetas
+  ),
+  RutaProtegida(
+    "campaniasActivas",
+    "/productos/campanias-activas",
+    ADMIN_JEFE,
+    CampaniasActivas
   ),
   RutaProtegida(
     "campaniasFestivas",

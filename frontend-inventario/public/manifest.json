@@ -27,7 +27,22 @@
       "type": "image/jpeg",
       "sizes": "810x458"
     },
-    {"src": "BannerNavidad.png", "type": "image/png", "sizes": "900x217"}
+    { "src": "BannerNavidad.png", "type": "image/png", "sizes": "900x217" },
+    {
+      "src": "BannerFiestasPatrias.jpg",
+      "type": "image/jpeg",
+      "sizes": "1742x980"
+    },
+    {
+      "src": "BannerEscolar.jpg",
+      "type": "image/jpeg",
+      "sizes": "714x260"
+    },
+    {
+      "src": "BannerVerano.jpg",
+      "type": "image/jpeg",
+      "sizes": "1200x438"
+    }
   ],
   "start_url": ".",
   "display": "standalone",

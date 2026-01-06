@@ -14,7 +14,6 @@ import {
 import {
     Send as SendIcon,
     Close as CloseIcon,
-    Chat as ChatIcon,
     SmartToy as BotIcon
 } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
@@ -293,7 +292,7 @@ const ChatWidget = () => {
                 onClick={handleToggle}
                 sx={{ float: 'right', mb: 10 }}
             >
-                {isOpen ? <CloseIcon /> : <ChatIcon />}
+                {isOpen ? <CloseIcon /> : <BotIcon />}
             </Fab>
         </Box>
     );

@@ -19,7 +19,14 @@ public class CampaniaServiceImpl implements CampaniaService {
 
     @Autowired
     private CampaniaRepository campaniaRepository;
+
+    @Autowired
     private ProductoRepository productoRepository;
+
+    @Override
+    public List<Campania> obtenerTodas() {
+        return campaniaRepository.findAll();
+    }
 
     @Override
     public List<Campania> obtenerCampaniasRelevantes() {
@@ -27,33 +34,54 @@ public class CampaniaServiceImpl implements CampaniaService {
     }
 
     @Override
-    public Campania guardar(Campania campania) {
-        // 1. Validar Fechas (Tu lógica actual)
-        if (campania.getFechaFin().isBefore(campania.getFechaInicio())) {
-            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la de inicio");
-        }
-
-        // 2. Validar Nombre Duplicado
-        // Buscamos si existe alguna campaña con ese nombre (ignorando mayúsculas)
+    public Campania crear(Campania campania) {
+        validarFechas(campania);
         Optional<Campania> campaniaExistente = campaniaRepository
                 .findByNombreCampaniaIgnoreCase(campania.getNombreCampania().trim());
 
         if (campaniaExistente.isPresent()) {
-            // Lógica para diferenciar CREAR de ACTUALIZAR:
+            throw new ResourceConflictException(
+                    "Ya existe una campaña registrada con el nombre: " + campania.getNombreCampania());
+        }
+        campania.setId(null);
+        return campaniaRepository.save(campania);
+    }
 
-            // Si la campaña entrante NO tiene ID (es nueva) y encontramos una, es
-            // duplicado.
-            if (campania.getId() == null) {
-                throw new ResourceConflictException(
-                        "Ya existe una campaña registrada con el nombre: " + campania.getNombreCampania());
-            }
-            if (!campaniaExistente.get().getId().equals(campania.getId())) {
-                throw new ResourceConflictException(
-                        "El nombre '" + campania.getNombreCampania() + "' ya está en uso por otra campaña.");
+    @Override
+    public Campania actualizar(Integer id, Campania campaniaDetails) {
+        Campania campaniaExistente = campaniaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No se encontró la campaña con ID: " + id));
+        validarFechas(campaniaDetails);
+
+        Optional<Campania> nombreDuplicado = campaniaRepository
+                .findByNombreCampaniaIgnoreCase(campaniaDetails.getNombreCampania().trim());
+
+        if (nombreDuplicado.isPresent() && !nombreDuplicado.get().getId().equals(id)) {
+            throw new ResourceConflictException(
+                    "El nombre '" + campaniaDetails.getNombreCampania() + "' ya está en uso por otra campaña.");
+        }
+        campaniaExistente.setNombreCampania(campaniaDetails.getNombreCampania());
+        campaniaExistente.setDescripcion(campaniaDetails.getDescripcion());
+        campaniaExistente.setFechaInicio(campaniaDetails.getFechaInicio());
+        campaniaExistente.setFechaFin(campaniaDetails.getFechaFin());
+
+        return campaniaRepository.save(campaniaExistente);
+    }
+
+    @Override
+    public void eliminar(Integer id) {
+        if (!campaniaRepository.existsById(id)) {
+            throw new RuntimeException("No se puede eliminar. La campaña con ID " + id + " no existe.");
+        }
+        campaniaRepository.deleteById(id);
+    }
+
+    private void validarFechas(Campania campania) {
+        if (campania.getFechaInicio() != null && campania.getFechaFin() != null) {
+            if (campania.getFechaFin().isBefore(campania.getFechaInicio())) {
+                throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la de inicio");
             }
         }
-
-        return campaniaRepository.save(campania);
     }
 
     @Override
@@ -74,15 +102,12 @@ public class CampaniaServiceImpl implements CampaniaService {
 
         return "Próximamente";
     }
+
     @Override
     public void asignarProductos(Integer campaniaId, List<Long> productoIds) {
         Campania campania = campaniaRepository.findById(campaniaId)
                 .orElseThrow(() -> new RuntimeException("Campaña no encontrada"));
-
-        // Buscamos todos los productos cuyos IDs vengan en la lista
         List<Producto> productosSeleccionados = productoRepository.findAllById(productoIds);
-
-        // Actualizamos la relación
         campania.setProductosAplicables(productosSeleccionados);
         campaniaRepository.save(campania);
     }

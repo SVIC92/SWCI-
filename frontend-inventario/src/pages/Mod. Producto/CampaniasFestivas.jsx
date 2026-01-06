@@ -1,5 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getCampaniasActivas, guardarCampania, asignarProductosACampania/*, eliminarCampania */ } from '../../api/campaniaApi';
+import {
+    obtenerTodasLasCampanias,
+    crearCampania,
+    actualizarCampania,
+    eliminarCampania,
+    asignarProductosACampania
+} from '../../api/campaniaApi';
 import { getProductos } from '../../api/productoApi';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
@@ -10,15 +16,16 @@ import { useTheme } from '@mui/material/styles';
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 
 export default function CampaniasFestivas() {
-    const theme = useTheme(); // <--- OBTENER EL TEMA ACTUAL
+    const theme = useTheme();
     const isDarkMode = theme.palette.mode === 'dark';
     const [campanias, setCampanias] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
     const [todosLosProductos, setTodosLosProductos] = useState([]);
     const [busquedaProd, setBusquedaProd] = useState("");
     const [productosSeleccionados, setProductosSeleccionados] = useState([]);
-    // Estado para el formulario
+
     const [form, setForm] = useState({
         id: null,
         nombreCampania: '',
@@ -28,12 +35,6 @@ export default function CampaniasFestivas() {
         porcentajeDescuento: 0.10,
         imagenUrl: ''
     });
-    const cargarProductosInventario = async () => {
-        try {
-            const data = await getProductos();
-            setTodosLosProductos(data);
-        } catch (e) { console.error("Error cargando productos", e); }
-    };
 
     const stompClientRef = useRef(null);
 
@@ -41,18 +42,39 @@ export default function CampaniasFestivas() {
         cargarCampanias();
         cargarProductosInventario();
         conectarWebSocket();
+
         const intervalId = setInterval(() => setCampanias(prev => [...prev]), 60000);
+
         return () => {
             if (stompClientRef.current) stompClientRef.current.disconnect();
             clearInterval(intervalId);
         };
     }, []);
 
-    // --- WebSocket y Carga de Datos (Igual que antes) ---
+    const cargarCampanias = async () => {
+        try {
+            const data = await obtenerTodasLasCampanias();
+            setCampanias(data);
+        } catch (error) {
+            console.error("Error cargando campañas:", error);
+            Swal.fire('Error', 'No se pudieron cargar las campañas', 'error');
+        }
+    };
+
+    const cargarProductosInventario = async () => {
+        try {
+            const data = await getProductos();
+            setTodosLosProductos(data);
+        } catch (e) {
+            console.error("Error cargando productos", e);
+        }
+    };
+
     const conectarWebSocket = () => {
-        const socket = new SockJS("https://swci-backend.onrender.com");
+        const socket = new SockJS("https://swci-backend.onrender.com/ws");
         const stompClient = Stomp.over(socket);
         stompClient.debug = () => { };
+
         stompClient.connect({}, () => {
             stompClientRef.current = stompClient;
             stompClient.subscribe('/topic/alertas', (mensaje) => {
@@ -70,23 +92,16 @@ export default function CampaniasFestivas() {
                     cargarCampanias();
                 }
             });
+        }, (error) => {
+            console.error("Error WebSocket:", error);
         });
-    };
-
-    const cargarCampanias = async () => {
-        try {
-            const data = await getCampaniasActivas();
-            setCampanias(data);
-        } catch (error) {
-            console.error("Error cargando campañas:", error);
-        }
     };
 
     const abrirModal = (campania = null) => {
         if (campania) {
             setForm(campania);
             const idsPrevios = campania.productosAplicables
-                ? campania.productosAplicables.map(p => p.id_producto) // CORREGIDO
+                ? campania.productosAplicables.map(p => p.id_producto || p.id)
                 : [];
             setProductosSeleccionados(idsPrevios);
         } else {
@@ -95,12 +110,13 @@ export default function CampaniasFestivas() {
         }
         setModalOpen(true);
     };
+
     const toggleProducto = (id) => {
         setProductosSeleccionados(prev => {
             if (prev.includes(id)) {
-                return prev.filter(pId => pId !== id); // Quitar
+                return prev.filter(pId => pId !== id);
             } else {
-                return [...prev, id]; // Agregar
+                return [...prev, id];
             }
         });
     };
@@ -114,32 +130,43 @@ export default function CampaniasFestivas() {
         e.preventDefault();
         setLoading(true);
         try {
-            const campaniaGuardada = await guardarCampania(form);
-            const idFinal = campaniaGuardada.id || form.id;
+            let idFinal;
 
-            if (idFinal) {
+            if (form.id) {
+                const campaniaActualizada = await actualizarCampania(form.id, form);
+                idFinal = campaniaActualizada.id;
+                Swal.fire('Actualizado', 'La campaña ha sido actualizada', 'success');
+            } else {
+                const campaniaNueva = await crearCampania(form);
+                idFinal = campaniaNueva.id;
+                Swal.fire('Creado', 'Campaña creada exitosamente', 'success');
+            }
+
+            if (idFinal && productosSeleccionados.length > 0) {
                 await asignarProductosACampania(idFinal, productosSeleccionados);
             }
 
-            Swal.fire('Éxito', 'Campaña y productos guardados', 'success');
             setModalOpen(false);
             cargarCampanias();
         } catch (error) {
-            Swal.fire('Error', error.response?.data?.message || 'Error al guardar', 'error');
+            console.error(error);
+            const msg = error.response?.data?.message || 'Error al procesar la solicitud';
+            Swal.fire('Error', msg, 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    /*const handleEliminar = async (id) => {
+    const handleEliminar = async (id) => {
         const result = await Swal.fire({
             title: '¿Estás seguro?',
-            text: "No podrás revertir esto",
+            text: "Se eliminará la campaña permanentemente.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sí, eliminar'
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
         });
 
         if (result.isConfirmed) {
@@ -148,13 +175,14 @@ export default function CampaniasFestivas() {
                 Swal.fire('Eliminado', 'La campaña ha sido eliminada.', 'success');
                 cargarCampanias();
             } catch (error) {
+                console.error(error);
                 Swal.fire('Error', 'No se pudo eliminar la campaña', 'error');
             }
         }
-    };*/
+    };
 
-    // --- Helpers Visuales ---
     const getDiasRestantes = (fechaFin) => {
+        if (!fechaFin) return 0;
         const hoy = new Date();
         const fin = new Date(fechaFin);
         fin.setHours(23, 59, 59);
@@ -168,6 +196,7 @@ export default function CampaniasFestivas() {
         const diasRestantes = getDiasRestantes(fechaFin);
 
         if (hoy < inicio) return { clase: 'card-future', texto: 'Próximamente', icono: <FaCalendarAlt /> };
+        if (diasRestantes === 0) return { clase: 'card-finished', texto: 'Finalizada', icono: <FaClock /> };
         if (diasRestantes <= 3) return { clase: 'card-urgent', texto: '¡Termina pronto!', icono: <FaBullhorn /> };
         return { clase: 'card-active', texto: 'En Curso', icono: <FaGift /> };
     };
@@ -177,8 +206,8 @@ export default function CampaniasFestivas() {
             <div className={`campanias-wrapper ${isDarkMode ? 'theme-dark' : 'theme-light'}`}>
                 <div className="header-section">
                     <div className="header-info">
-                        <h3>🎉 Campañas Comerciales & Festividades</h3>
-                        <p>Gestión y monitoreo de eventos promocionales.</p>
+                        <h3>🎉 Gestión de Campañas</h3>
+                        <p>Administra eventos promocionales, descuentos y festividades.</p>
                     </div>
                     <button className="btn-nueva-campania" onClick={() => abrirModal()}>
                         <FaPlus /> Nueva Campaña
@@ -195,15 +224,14 @@ export default function CampaniasFestivas() {
 
                             return (
                                 <div key={campania.id} className={`campania-card ${estado.clase}`}>
-                                    {/* --- AQUI ESTA LA IMAGEN --- */}
                                     <div className="card-image-header" style={{
                                         backgroundImage: `url(${campania.imagenUrl}), linear-gradient(135deg, #667eea 0%, #764ba2 100%)`
                                     }}>
                                         <div className="overlay-gradient"></div>
                                         <span className="badge-descuento">-{Math.round(campania.porcentajeDescuento * 100)}%</span>
                                         <div className="card-actions-top">
-                                            <button onClick={() => abrirModal(campania)} className="btn-icon"><FaEdit /></button>
-                                            {/*<button onClick={() => handleEliminar(campania.id)} className="btn-icon btn-delete"><FaTrash /></button>*/}
+                                            <button onClick={() => abrirModal(campania)} className="btn-icon" title="Editar"><FaEdit /></button>
+                                            <button onClick={() => handleEliminar(campania.id)} className="btn-icon btn-delete" title="Eliminar"><FaTrash /></button>
                                         </div>
                                     </div>
 
@@ -219,8 +247,10 @@ export default function CampaniasFestivas() {
                                                 <FaCalendarAlt /> <span>{new Date(campania.fechaInicio).toLocaleDateString()} - {new Date(campania.fechaFin).toLocaleDateString()}</span>
                                             </div>
                                             <div className="data-row countdown-row">
-                                                <FaClock className={dias <= 3 ? "icon-pulse" : ""} />
-                                                <span className="value-bold">{dias === 0 ? 'Finaliza hoy' : `Quedan ${dias} días`}</span>
+                                                <FaClock className={dias <= 3 && dias > 0 ? "icon-pulse" : ""} />
+                                                <span className="value-bold">
+                                                    {dias === 0 ? 'Finalizada' : `Quedan ${dias} días`}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -229,6 +259,7 @@ export default function CampaniasFestivas() {
                         })}
                     </div>
                 )}
+
                 {modalOpen && (
                     <div className="modal-overlay">
                         <div className="modal-content">
@@ -287,12 +318,14 @@ export default function CampaniasFestivas() {
                                         {todosLosProductos
                                             .filter(p => p.nombre.toLowerCase().includes(busquedaProd.toLowerCase()))
                                             .map(prod => {
-                                                const isSelected = productosSeleccionados.includes(prod.id_producto);
+                                                const prodId = prod.id_producto || prod.id;
+                                                const isSelected = productosSeleccionados.includes(prodId);
+
                                                 return (
                                                     <div
-                                                        key={prod.id_producto} /* CORREGIDO: id -> id_producto */
+                                                        key={prodId}
                                                         className={`product-item ${isSelected ? 'selected' : ''}`}
-                                                        onClick={() => toggleProducto(prod.id_producto)} /* CORREGIDO */
+                                                        onClick={() => toggleProducto(prodId)}
                                                     >
                                                         <div className="check-icon">
                                                             {isSelected ? <FaCheckSquare /> : <FaSquare />}
@@ -302,7 +335,6 @@ export default function CampaniasFestivas() {
                                                             <span className="prod-marca">Marca: {prod.marca}</span>
                                                         </div>
                                                         <div className="prod-price">
-                                                            {/* CORREGIDO: precio -> precio_venta */}
                                                             S/ {prod.precio_venta}
                                                         </div>
                                                     </div>

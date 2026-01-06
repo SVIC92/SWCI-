@@ -4,8 +4,11 @@ import com.inventario.backend_inventario.Model.Campania;
 import java.util.List;
 
 public interface CampaniaService {
+    List<Campania> obtenerTodas();
     List<Campania> obtenerCampaniasRelevantes();
     String obtenerEstadoAlerta(Campania campania);
-    Campania guardar(Campania campania);
+    Campania crear(Campania campania);
+    Campania actualizar(Integer id, Campania campaniaDetails);
+    void eliminar(Integer id);
     void asignarProductos(Integer campaniaId, List<Long> productoIds);
 }
