@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCampaniasActivas } from '../../api/campaniaApi';
-import { FaGift, FaClock, FaCalendarAlt, FaBullhorn, FaTasks } from 'react-icons/fa';
+// 1. Agregamos FaArrowLeft a los imports
+import { FaGift, FaClock, FaCalendarAlt, FaBullhorn, FaTasks, FaArrowLeft } from 'react-icons/fa';
 import '../../components/styles/CampaniaFestivas.css';
 import { useTheme } from '@mui/material/styles';
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
@@ -59,15 +60,27 @@ export default function CampaniasActivas() {
 
                 <div className="header-section">
                     <div className="header-info">
-                        <h3>🎁 Campañas Activas y Proximas</h3>
+                        <h3>🎁 Campañas Activas y Próximas</h3>
                         <p>Aprovecha las promociones y eventos vigentes.</p>
                     </div>
-                    <button
-                        className="btn-nueva-campania"
-                        onClick={() => navigate('/productos/campanias-festivas')}
-                    >
-                        <FaTasks /> Gestión de campañas
-                    </button>
+
+                    {/* 2. Contenedor de botones con el botón Volver */}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button
+                            className="btn-nueva-campania"
+                            style={{ backgroundColor: '#6c757d', border: 'none' }}
+                            onClick={() => navigate(-1)} // Navegar atrás
+                        >
+                            <FaArrowLeft /> Volver
+                        </button>
+
+                        <button
+                            className="btn-nueva-campania"
+                            onClick={() => navigate('/productos/campanias-festivas')}
+                        >
+                            <FaTasks /> Gestión de campañas
+                        </button>
+                    </div>
                 </div>
 
                 {loading ? (

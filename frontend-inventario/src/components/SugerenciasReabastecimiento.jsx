@@ -5,8 +5,9 @@ import { getSugerenciasReabastecimiento } from '../api/productoApi';
 import { getSedes } from '../api/sedeApi';
 import TablaLista from './TablaLista';
 import { Box, FormControl, InputLabel, Select, MenuItem, Chip, Alert, Typography } from '@mui/material';
-import LayoutDashboard from './Layouts/LayoutDashboard';
 import BuscadorInteligente from './BuscadorInteligente';
+// 1. IMPORTANTE: Volvemos a importar el Layout para usarlo cuando no hay tabla
+import LayoutDashboard from './Layouts/LayoutDashboard';
 
 const SugerenciasReabastecimiento = () => {
     const navigate = useNavigate();
@@ -62,69 +63,80 @@ const SugerenciasReabastecimiento = () => {
         },
     ];
 
-    return (
-        <LayoutDashboard>
-            <Box sx={{ p: 2 }}>
-                {/* Selector de Sede */}
-                <Box
-                    sx={{
-                        mb: 3,
-                        p: 2,
-                        // CAMBIO CLAVE AQUÍ: Usar token del tema en lugar de 'white'
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        boxShadow: 1,
-                        display: 'flex',
-                        flexDirection: { xs: 'column', md: 'row' },
-                        gap: 3,
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                    }}
-                >
-                    {/* A. EL BUSCADOR INTELIGENTE */}
-                    <Box sx={{ width: { xs: '100%', md: '400px' } }}>
-                        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                            Búsqueda Rápida de Productos:
-                        </Typography>
-                        <BuscadorInteligente />
-                    </Box>
-
-                    {/* B. EL SELECTOR DE SEDE (FILTRO) */}
-                    <Box sx={{ width: { xs: '100%', md: '300px' } }}>
-                        <FormControl fullWidth size="small">
-                            <InputLabel>Filtrar Alertas por Sede</InputLabel>
-                            <Select
-                                value={idSede}
-                                label="Filtrar Alertas por Sede"
-                                onChange={(e) => setIdSede(e.target.value)}
-                            >
-                                {sedes.map((sede) => (
-                                    <MenuItem key={sede.idSede} value={sede.idSede}>
-                                        {sede.nombreSede}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Box>
-                </Box>
-
-                {!idSede ? (
-                    <Alert severity="info">Por favor, seleccione una sede arriba para ver las sugerencias de compra.</Alert>
-                ) : (
-                    <TablaLista
-                        title={`Sugerencias de Compra - ${sedes.find(s => s.id_sede === idSede)?.nombre_sede || ''}`}
-                        columns={columns}
-                        data={datosTabla}
-                        isLoading={isLoading}
-                        onRefresh={refetch}
-                        onBack={() => navigate('/dashboard-productos')}
-                        getRowId={(row) => row.idProducto}
-                        addButtonLabel=""
-                        onAdd={null}
-                    />
-                )}
+    // Contenido de los filtros (reutilizable)
+    const filtrosContent = (
+        <Box
+            sx={{
+                mb: 3,
+                p: 2,
+                bgcolor: 'background.paper',
+                borderRadius: 2,
+                boxShadow: 1,
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                gap: 3,
+                alignItems: 'center',
+                justifyContent: 'space-between'
+            }}
+        >
+            <Box sx={{ width: { xs: '100%', md: '400px' } }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                    Búsqueda Rápida de Productos:
+                </Typography>
+                <BuscadorInteligente />
             </Box>
-        </LayoutDashboard>
+
+            <Box sx={{ width: { xs: '100%', md: '300px' } }}>
+                <FormControl fullWidth size="small">
+                    <InputLabel>Filtrar Alertas por Sede</InputLabel>
+                    <Select
+                        value={idSede}
+                        label="Filtrar Alertas por Sede"
+                        onChange={(e) => setIdSede(e.target.value)}
+                    >
+                        {sedes.map((sede) => (
+                            <MenuItem key={sede.idSede} value={sede.idSede}>
+                                {sede.nombreSede}
+                            </MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Box>
+        </Box>
+    );
+
+    // 2. LÓGICA CONDICIONAL PARA EL RETURN
+
+    // CASO A: Si NO hay sede seleccionada, usamos LayoutDashboard manualmente
+    if (!idSede) {
+        return (
+            <LayoutDashboard>
+                <Box sx={{ p: 2 }}>
+                    {filtrosContent}
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                        Por favor, seleccione una sede arriba para ver las sugerencias de compra.
+                    </Alert>
+                </Box>
+            </LayoutDashboard>
+        );
+    }
+
+    // CASO B: Si HAY sede, usamos TablaLista (que ya trae el LayoutDashboard por dentro)
+    return (
+        <TablaLista
+            title={`Sugerencias de Compra - ${sedes.find(s => s.idSede === idSede)?.nombreSede || ''}`}
+            columns={columns}
+            data={datosTabla}
+            isLoading={isLoading}
+            onRefresh={refetch}
+            onBack={() => navigate('/dashboard-productos')}
+            getRowId={(row) => row.idProducto}
+            addButtonLabel=""
+            onAdd={null}
+        >
+            {/* Pasamos los filtros como hijo para que se vean dentro de la tabla */}
+            {filtrosContent}
+        </TablaLista>
     );
 };
 

@@ -29,7 +29,7 @@ const ChatIA = () => {
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: "# Panel de Control IA \n\nHola, soy el Gerente Virtual. Estoy listo para analizar tus inventarios a pantalla completa. \n\nPrueba comandos como: \n- *Analizar reabastecimiento* \n- *Ver movimientos recientes*",
+            text: "# Panel de Control IA \n\nHola, soy el Gerente Virtual. Estoy listo para analizar tus inventarios a pantalla completa. \n\nPrueba comandos como: \n- *Analizar reabastecimiento* \n- *Ver movimientos recientes de un producto* \n- *Ver datos de proveedor especifico* \n- *Ver valor de inventario de un producto* \n- *Ver el stock de un producto en todas las sedes* \n- *Ver resumen de una Sede* \n- *Ver detalle de un producto* \n- *Consultar transferencias pendientes* \n- *Consultar Campaña activa*",
             sender: 'bot'
         }
     ]);
@@ -80,7 +80,7 @@ const ChatIA = () => {
     const handleClearChat = () => {
         setMessages([{
             id: Date.now(),
-            text: "Chat limpiado. ¿En qué puedo ayudarte ahora?",
+            text: "Chat limpio. ¿En qué puedo ayudarte ahora?",
             sender: 'bot'
         }]);
     };
@@ -267,7 +267,7 @@ const ChatIA = () => {
                         </IconButton>
                     </Box>
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-                        La IA puede cometer errores. Verifica la información importante.
+                        La IA puede cometer errores. Verifica la información importante, por el momento tiene límite de consultas.
                     </Typography>
                 </Box>
             </Paper>
