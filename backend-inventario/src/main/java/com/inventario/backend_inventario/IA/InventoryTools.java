@@ -256,16 +256,15 @@ public class InventoryTools {
             var p = productos.get(0); 
             
             String ficha = String.format(
-                "📋 **Ficha del Producto: %s**\n" +
-                "--------------------------------\n" +
-                "🏷️ **Marca:** %s\n" +
-                "🔢 **SKU:** %s  |  **EAN:** %s\n" +
-                "📂 **Categoría:** %s\n" +
-                "💵 **Precio Venta:** S/ %.2f\n" +
-                "📉 **Costo Compra:** S/ %.2f\n" +
-                "📦 **Unidad:** %s\n" +
-                "📊 **Niveles Stock (Min/Ideal):** %d / %d\n" +
-                "🚚 **Proveedor Principal:** %s",
+                "📋 **Ficha Técnica: %s**\n\n" +  
+                "- 🏷️ **Marca:** %s\n" +   
+                "- 🔢 **SKU:** %s  |  **EAN:** %s\n" +
+                "- 📂 **Categoría:** %s\n" +
+                "- 💵 **Precio Venta:** S/ %.2f\n" +
+                "- 📉 **Costo Compra:** S/ %.2f\n" +
+                "- 📦 **Unidad:** %s\n" +
+                "- 📊 **Stock (Min/Ideal):** %d / %d\n" +
+                "- 🚚 **Proveedor:** %s",
                 p.getNombre(), 
                 p.getMarca(), 
                 p.getSku(), p.getCodEan(),

@@ -15,26 +15,32 @@ import {
     SmartToy as BotIcon,
     DeleteOutline as ClearIcon
 } from '@mui/icons-material';
+
+// Importaciones para Markdown y resaltado de sintaxis
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'; // IMPORTANTE: Para tablas y listas avanzadas
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
 import LayoutDashboard from '../../components/Layouts/LayoutDashboard';
 import { chatConGerente } from '../../api/iaApi';
 
 const ChatIA = () => {
-    const theme = useTheme(); 
+    const theme = useTheme();
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: "# Panel de Control IA \n\nHola, soy el Gerente Virtual. Estoy listo para analizar tus inventarios a pantalla completa. \n\nPrueba comandos como: \n- *Analizar reabastecimiento* \n- *Ver movimientos recientes de un producto* \n- *Ver datos de proveedor especifico* \n- *Ver valor de inventario de un producto* \n- *Ver el stock de un producto en todas las sedes* \n- *Ver resumen de una Sede* \n- *Ver detalle de un producto* \n- *Consultar transferencias pendientes* \n- *Consultar Campaña activa*",
+            text: "# 🤖 Panel de Control IA\n\nHola, soy el **Gerente Virtual**. Estoy listo para analizar tus inventarios.\n\n### 🚀 Comandos disponibles:\n- 🛒 *Analizar reabastecimiento*\n- 📊 *Ver movimientos recientes (Kardex)*\n- 🚚 *Consultar transferencias pendientes*\n- 🎉 *Consultar campañas activas*\n- 🏢 *Ver resumen de una Sede*\n- 📍 *¿Dónde hay stock de [Producto]?*\n- 💰 *Valor del inventario*\n- 📋 *Ficha técnica de [Producto]*",
             sender: 'bot'
         }
     ]);
 
     const messagesEndRef = useRef(null);
+
+    // Auto-scroll al recibir mensajes
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isLoading]);
@@ -61,7 +67,7 @@ const ChatIA = () => {
             console.error("Error:", error);
             const errorMessage = {
                 id: Date.now() + 1,
-                text: "⚠️ **Error de conexión**: No pude comunicarme con el servidor.",
+                text: "⚠️ **Error de conexión**: No pude conectar con el cerebro de la IA. Por favor, verifica que el servidor Backend esté encendido.",
                 sender: 'bot'
             };
             setMessages((prev) => [...prev, errorMessage]);
@@ -80,7 +86,7 @@ const ChatIA = () => {
     const handleClearChat = () => {
         setMessages([{
             id: Date.now(),
-            text: "Chat limpio. ¿En qué puedo ayudarte ahora?",
+            text: "🧹 **Chat limpiado**.\n\n¿En qué puedo ayudarte ahora?",
             sender: 'bot'
         }]);
     };
@@ -95,9 +101,7 @@ const ChatIA = () => {
                     height: '85vh',
                     borderRadius: 4,
                     overflow: 'hidden',
-                    // 3. Fondo dinámico: Paper en oscuro, blanco en claro
                     bgcolor: 'background.paper',
-                    // Borde sutil en modo oscuro para separar del fondo
                     border: theme.palette.mode === 'dark' ? '1px solid rgba(255,255,255,0.12)' : 'none'
                 }}
             >
@@ -105,7 +109,7 @@ const ChatIA = () => {
                 <Box sx={{
                     p: 2,
                     bgcolor: 'primary.main',
-                    color: 'primary.contrastText', // Asegura contraste
+                    color: 'primary.contrastText',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -120,7 +124,7 @@ const ChatIA = () => {
                                 Gerente de Inventario IA
                             </Typography>
                             <Typography variant="caption" sx={{ opacity: 0.8 }} color="inherit">
-                                En línea | Modelo Llama 3.3
+                                En línea | Powered by Llama 3
                             </Typography>
                         </Box>
                     </Box>
@@ -134,11 +138,10 @@ const ChatIA = () => {
                     flex: 1,
                     p: 3,
                     overflowY: 'auto',
-                    // 4. Fondo del área de chat: Gris oscuro en dark mode, gris claro en light mode
-                    bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#f8f9fa',
+                    bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#f0f2f5',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 3
+                    gap: 2
                 }}>
                     {messages.map((msg) => (
                         <Box
@@ -146,43 +149,67 @@ const ChatIA = () => {
                             sx={{
                                 display: 'flex',
                                 justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                                mb: 1
                             }}
                         >
                             {msg.sender === 'bot' && (
-                                <Avatar sx={{ bgcolor: 'primary.main', width: 30, height: 30, mr: 1, mt: 1 }}>
+                                <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, mr: 1, mt: 1 }}>
                                     <BotIcon fontSize="small" />
                                 </Avatar>
                             )}
 
                             <Box
                                 sx={{
-                                    maxWidth: '75%',
+                                    maxWidth: '80%',
                                     p: 2,
                                     borderRadius: 3,
                                     borderTopLeftRadius: msg.sender === 'bot' ? 0 : 3,
                                     borderTopRightRadius: msg.sender === 'user' ? 0 : 3,
-                                    // 5. Colores de las burbujas
-                                    bgcolor: msg.sender === 'user'
-                                        ? 'primary.main'
-                                        : 'background.paper', // Bot usa el color del "papel" (oscuro o blanco)
-                                    color: msg.sender === 'user'
-                                        ? 'primary.contrastText'
-                                        : 'text.primary',
+                                    bgcolor: msg.sender === 'user' ? 'primary.main' : 'background.paper',
+                                    color: msg.sender === 'user' ? 'primary.contrastText' : 'text.primary',
                                     boxShadow: 1,
-                                    // Borde extra para el bot en modo oscuro para que resalte
                                     border: (theme.palette.mode === 'dark' && msg.sender === 'bot')
                                         ? '1px solid rgba(255,255,255,0.12)'
                                         : 'none',
 
-                                    '& p': { m: 0, lineHeight: 1.6 },
-                                    '& ul, & ol': { pl: 3 },
-                                    '& pre': { m: 0, p: 0, borderRadius: 2, overflow: 'hidden', mt: 1 }
+                                    // --- ESTILOS MARKDOWN IMPORTANTES ---
+                                    '& p': { m: 0, mb: 1, lineHeight: 1.6 },
+                                    '& p:last-child': { mb: 0 },
+                                    // Listas: aseguran que los bullets se vean
+                                    '& ul, & ol': {
+                                        pl: 3,
+                                        mb: 1,
+                                        listStylePosition: 'outside'
+                                    },
+                                    '& li': { mb: 0.5 },
+                                    // Tablas: bordes y estructura
+                                    '& table': {
+                                        width: '100%',
+                                        borderCollapse: 'collapse',
+                                        mt: 1,
+                                        mb: 1,
+                                        fontSize: '0.9rem'
+                                    },
+                                    '& th, & td': {
+                                        border: '1px solid',
+                                        borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
+                                        padding: '8px',
+                                        textAlign: 'left'
+                                    },
+                                    '& th': {
+                                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                                        fontWeight: 'bold'
+                                    },
+                                    // Código
+                                    '& pre': { m: 0, p: 0, borderRadius: 2, overflow: 'hidden', mt: 1 },
+                                    '& a': { color: 'inherit', textDecoration: 'underline' }
                                 }}
                             >
                                 {msg.sender === 'user' ? (
-                                    <Typography variant="body1">{msg.text}</Typography>
+                                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>{msg.text}</Typography>
                                 ) : (
                                     <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]} // Plugin para tablas
                                         components={{
                                             code({ node, inline, className, children, ...props }) {
                                                 const match = /language-(\w+)/.exec(className || '');
@@ -197,10 +224,11 @@ const ChatIA = () => {
                                                     </SyntaxHighlighter>
                                                 ) : (
                                                     <code className={className} {...props} style={{
-                                                        // 6. Código inline adaptable
-                                                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                                                        padding: '2px 4px',
-                                                        borderRadius: '4px'
+                                                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                                                        padding: '2px 5px',
+                                                        borderRadius: '4px',
+                                                        fontFamily: 'monospace',
+                                                        fontSize: '0.9em'
                                                     }}>
                                                         {children}
                                                     </code>
@@ -216,9 +244,11 @@ const ChatIA = () => {
                     ))}
 
                     {isLoading && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2, mt: 1 }}>
                             <CircularProgress size={20} />
-                            <Typography variant="body2" color="text.secondary">Analizando datos...</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                El Gerente está escribiendo...
+                            </Typography>
                         </Box>
                     )}
                     <div ref={messagesEndRef} />
@@ -226,11 +256,11 @@ const ChatIA = () => {
 
                 {/* --- INPUT AREA --- */}
                 <Divider />
-                <Box sx={{ p: 3, bgcolor: 'background.paper' }}>
+                <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
                         <TextField
                             fullWidth
-                            placeholder="Escribe tu consulta sobre el inventario..."
+                            placeholder="Escribe tu consulta... (Ej: ¿Dónde hay stock de paracetamol?)"
                             variant="outlined"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
@@ -241,8 +271,7 @@ const ChatIA = () => {
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: 3,
-                                    // 7. Input background adaptable
-                                    bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#f5f5f5'
+                                    bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#f8f9fa'
                                 }
                             }}
                         />
@@ -253,8 +282,8 @@ const ChatIA = () => {
                             sx={{
                                 bgcolor: 'primary.main',
                                 color: 'primary.contrastText',
-                                width: 50,
-                                height: 50,
+                                width: 48,
+                                height: 48,
                                 mb: 0.5,
                                 '&:hover': { bgcolor: 'primary.dark' },
                                 '&.Mui-disabled': {
@@ -266,8 +295,8 @@ const ChatIA = () => {
                             <SendIcon />
                         </IconButton>
                     </Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-                        La IA puede cometer errores. Verifica la información importante, por el momento tiene límite de consultas.
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', textAlign: 'center', fontSize: '0.7rem' }}>
+                        IA con acceso a inventario, sedes, proveedores y campañas. Verifica los datos importantes.
                     </Typography>
                 </Box>
             </Paper>

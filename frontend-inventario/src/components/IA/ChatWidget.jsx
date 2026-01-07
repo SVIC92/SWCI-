@@ -59,8 +59,7 @@ const ChatWidget = () => {
         setIsLoading(true);
 
         // Ajuste de URL para local o producción
-        const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        const API_URL = isLocal ? "http://localhost:8080" : "https://swci-backend.onrender.com";
+        const API_URL = "https://swci-backend.onrender.com";
 
         try {
             const response = await fetch(`${API_URL}/api/chat-gerente`, {

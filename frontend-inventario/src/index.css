@@ -218,3 +218,15 @@ body.density-compact {
   --card-padding-y: 16px;
   --card-padding-x: 20px;
 }
+.markdown-content ul {
+  list-style-type: disc !important;
+  /* Puntos redondos */
+  padding-left: 20px !important;
+  /* Espacio a la izquierda */
+  margin-top: 10px !important;
+}
+
+.markdown-content li {
+  margin-bottom: 5px;
+  /* Espacio entre líneas */
+}
