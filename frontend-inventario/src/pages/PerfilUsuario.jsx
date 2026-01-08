@@ -22,8 +22,8 @@ function PerfilUsuario() {
   const nombreMostrar = [usuario.nombre_u].filter(Boolean).shift() || "";
   const estadoBruto = usuario.estado_u;
   const estadoTexto =
-    typeof estadoBruto === "number"
-      ? estadoBruto === 1
+    typeof estadoBruto === "boolean"
+      ? estadoBruto === true
         ? "Activo"
         : "Inactivo"
       : estadoBruto || "—";

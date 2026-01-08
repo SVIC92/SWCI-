@@ -334,7 +334,7 @@ const RutasReportes = [
   ),
   RutaProtegida(
     "auditoriaActividadUsuario",
-    "/auditoria-actividad-usuario",
+    "/auditoria/actividad/usuario",
     ALL_ROLES,
     AuditoriaActividadUsuario
   ),

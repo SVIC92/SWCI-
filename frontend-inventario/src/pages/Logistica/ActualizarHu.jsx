@@ -45,6 +45,8 @@ const ActualizarHu = () => {
     const [cantidad, setCantidad] = useState("");
     const [nuevosDetalles, setNuevosDetalles] = useState([]);
     const [nuevoEstado, setNuevoEstado] = useState("");
+    const [nuevoTipo, setNuevoTipo] = useState(""); // Estado para tipo de carga
+    const [nuevaFechaVencimiento, setNuevaFechaVencimiento] = useState(""); // Estado para fecha de vencimiento
 
     const [datosCargados, setDatosCargados] = useState(false);
 
@@ -63,6 +65,8 @@ const ActualizarHu = () => {
     useEffect(() => {
         if (huData && !datosCargados) {
             if (huData.estado) setNuevoEstado(huData.estado);
+            if (huData.tipoIndicador) setNuevoTipo(huData.tipoIndicador); // Cargar tipo
+            if (huData.fechaVencimiento) setNuevaFechaVencimiento(huData.fechaVencimiento); // Cargar fecha
             const listaBackend = huData.detalle || [];
 
             if (listaBackend.length > 0) {
@@ -162,6 +166,8 @@ const ActualizarHu = () => {
 
     const handleGuardar = () => {
         const payload = {
+            tipoIndicador: nuevoTipo,
+            fechaVencimiento: nuevaFechaVencimiento || null,
             estado: nuevoEstado,
             detalles: nuevosDetalles
         };
@@ -203,9 +209,37 @@ const ActualizarHu = () => {
                                     <Typography variant="body1">{huData?.almacen?.nombreSede || "N/A"}</Typography>
                                 </Box>
 
+                                {/* Campo Editable: Tipo Indicador */}
                                 <Box sx={{ mb: 2 }}>
-                                    <Typography variant="subtitle2" color="textSecondary">Tipo Indicador</Typography>
-                                    <Typography variant="body1">{huData?.tipoIndicador || "Estándar"}</Typography>
+                                    <TextField
+                                        select
+                                        label="Tipo de Carga"
+                                        fullWidth
+                                        size="small"
+                                        value={nuevoTipo}
+                                        onChange={(e) => setNuevoTipo(e.target.value)}
+                                    >
+                                        <MenuItem value="Estándar">Estándar</MenuItem>
+                                        <MenuItem value="Frágil">Frágil</MenuItem>
+                                        <MenuItem value="Refrigerado">Refrigerado</MenuItem>
+                                        <MenuItem value="Alto Valor">Alto Valor</MenuItem>
+                                        <MenuItem value="Medio HU">Medio HU</MenuItem>
+                                        <MenuItem value="Mixto">Mixto</MenuItem>
+                                        <MenuItem value="Monoproducto">Monoproducto</MenuItem>
+                                    </TextField>
+                                </Box>
+
+                                {/* Campo Editable: Fecha Vencimiento */}
+                                <Box sx={{ mb: 2 }}>
+                                    <TextField
+                                        label="Fecha Vencimiento"
+                                        type="date"
+                                        fullWidth
+                                        size="small"
+                                        InputLabelProps={{ shrink: true }}
+                                        value={nuevaFechaVencimiento}
+                                        onChange={(e) => setNuevaFechaVencimiento(e.target.value)}
+                                    />
                                 </Box>
 
                                 <Box sx={{ mb: 3 }}>

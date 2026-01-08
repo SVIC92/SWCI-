@@ -51,7 +51,7 @@ const DashboardReportes = () => {
             id: "reporte-auditoria-usuarios",
             titulo: "Reporte de Auditoría de Usuarios",
             descripcion: "Verifica las acciones realizadas por los usuarios en el sistema.",
-            ruta: "/auditoria-actividad-usuario",
+            ruta: "/auditoria/actividad/usuario",
         },
     ];
 

@@ -36,7 +36,7 @@ export default function DashboardAdmin() {
                         </div>
                     </div>
                     <div className="grid-item-large">
-                        <FeedActividad />
+                        <FeedActividad/>
                     </div>
                 </div>
             </div>

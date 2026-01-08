@@ -123,8 +123,8 @@ public class HuServiceImpl implements HuService {
         }
         if (huDto.getTipoIndicador() != null)
             hu.setTipoIndicador(huDto.getTipoIndicador());
-        if (huDto.getFechaSolicitada() != null)
-            hu.setFechaSolicitada(huDto.getFechaSolicitada());
+        if (huDto.getFechaVencimiento() != null)
+            hu.setFechaVencimiento(huDto.getFechaVencimiento());
 
         if (huDto.getDetalles() != null && !huDto.getDetalles().isEmpty()) {
             agregarProductosAHu(hu, huDto.getDetalles());
@@ -227,7 +227,7 @@ public class HuServiceImpl implements HuService {
         Hu hu = huRepository.findById(idHu)
                 .orElseThrow(() -> new EntityNotFoundException("HU no encontrada"));
 
-        if (hu.getEstado() == EstadoHu.COMPLETO || hu.getEstado() == EstadoHu.QUIEBRE) {
+        if (hu.getEstado() != EstadoHu.COMPLETO && hu.getEstado() != EstadoHu.QUIEBRE) {
             throw new IllegalStateException(
                     "La HU no está en un estado válido para ser solicitada, espere hasta que esté COMPLETO o QUIEBRE (Estado actual: "
                             + hu.getEstado() + ")");

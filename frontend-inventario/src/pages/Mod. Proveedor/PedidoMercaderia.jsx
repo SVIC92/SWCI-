@@ -35,13 +35,12 @@ import {
     Paper
 } from "@mui/material";
 
-// Iconos
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 import StoreIcon from "@mui/icons-material/Store";
 import EventIcon from "@mui/icons-material/Event";
-import InfoIcon from "@mui/icons-material/Info"; // Nuevo Icono para ver detalle
+import InfoIcon from "@mui/icons-material/Info";
 
 import TablaLista from "../../components/TablaLista";
 
