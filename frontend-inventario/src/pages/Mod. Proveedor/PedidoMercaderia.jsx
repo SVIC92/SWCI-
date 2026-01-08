@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { alpha } from "@mui/material/styles";
 
 // APIs
 import { getHuDisponibles, solicitarHu } from "../../api/huApi";
 import { getSedes } from "../../api/sedeApi";
 
-// Componentes UI de Material UI
+// Componentes UI
 import {
     Box,
     Typography,
@@ -19,7 +20,19 @@ import {
     TextField,
     MenuItem,
     Stack,
-    Divider
+    Divider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Grid,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper
 } from "@mui/material";
 
 // Iconos
@@ -28,8 +41,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
 import StoreIcon from "@mui/icons-material/Store";
 import EventIcon from "@mui/icons-material/Event";
+import InfoIcon from "@mui/icons-material/Info"; // Nuevo Icono para ver detalle
 
-// Tu componente tabla reutilizable
 import TablaLista from "../../components/TablaLista";
 
 const MySwal = withReactContent(Swal);
@@ -37,17 +50,17 @@ const MySwal = withReactContent(Swal);
 const PedidoMercaderia = () => {
     const queryClient = useQueryClient();
 
-    // --- Estados Locales ---
+    // --- Estados para Solicitud (Drawer) ---
     const [openDrawer, setOpenDrawer] = useState(false);
     const [huSeleccionada, setHuSeleccionada] = useState(null);
-
-    // Datos del formulario
     const [idSedeDestino, setIdSedeDestino] = useState("");
     const [fechaSolicitada, setFechaSolicitada] = useState("");
 
-    // --- 1. Carga de Datos (Queries) ---
+    // --- Estados para Detalle (Modal) ---
+    const [openDetalle, setOpenDetalle] = useState(false);
+    const [detalleData, setDetalleData] = useState(null);
 
-    // Obtener HUs Disponibles
+    // --- Queries ---
     const {
         data: hus = [],
         isLoading: loadingHus,
@@ -57,24 +70,26 @@ const PedidoMercaderia = () => {
         queryFn: () => getHuDisponibles(),
     });
 
-    // Obtener Sedes (Para el destino)
     const { data: sedes = [] } = useQuery({
         queryKey: ["sedes"],
         queryFn: getSedes,
     });
 
-    // --- 2. Mutación (Enviar Solicitud) ---
+    // --- Mutación Solicitud ---
     const solicitarMutation = useMutation({
         mutationFn: (payload) => solicitarHu(huSeleccionada.id, payload),
         onSuccess: () => {
-            queryClient.invalidateQueries(["huDisponibles"]); // Refrescar tabla
+            queryClient.invalidateQueries(["huDisponibles"]);
             handleCloseDrawer();
+            const isDark = document.body.classList.contains('dark-mode');
             MySwal.fire({
                 title: "¡Pedido Enviado!",
                 text: `La HU ${huSeleccionada?.codHu} ha sido solicitada correctamente.`,
                 icon: "success",
                 timer: 3000,
-                showConfirmButton: false
+                showConfirmButton: false,
+                background: isDark ? '#1e1e1e' : '#fff',
+                color: isDark ? '#fff' : '#545454'
             });
         },
         onError: (err) => {
@@ -83,19 +98,29 @@ const PedidoMercaderia = () => {
         }
     });
 
-    // --- 3. Manejadores ---
+    // --- Manejadores ---
 
     const handleClickSolicitar = (huRow) => {
         setHuSeleccionada(huRow);
         setOpenDrawer(true);
-        // Reiniciar formulario
         setIdSedeDestino("");
         setFechaSolicitada("");
     };
 
     const handleCloseDrawer = () => {
         setOpenDrawer(false);
-        setTimeout(() => setHuSeleccionada(null), 200); // Pequeño delay para que no parpadee al cerrar
+        setTimeout(() => setHuSeleccionada(null), 200);
+    };
+
+    // Nuevo: Ver Detalle
+    const handleVerDetalle = (huRow) => {
+        setDetalleData(huRow);
+        setOpenDetalle(true);
+    };
+
+    const handleCloseDetalle = () => {
+        setOpenDetalle(false);
+        setTimeout(() => setDetalleData(null), 200);
     };
 
     const handleConfirmarPedido = () => {
@@ -103,16 +128,12 @@ const PedidoMercaderia = () => {
             MySwal.fire("Faltan datos", "Por favor seleccione la sede de destino y la fecha de entrega.", "warning");
             return;
         }
-
         const payload = {
             idSedeDestino: idSedeDestino,
             fechaSolicitada: fechaSolicitada,
         };
-
         solicitarMutation.mutate(payload);
     };
-
-    // --- 4. Configuración de Tabla ---
 
     const getStatusColor = (estado) => {
         switch (estado) {
@@ -124,20 +145,17 @@ const PedidoMercaderia = () => {
         }
     };
 
+    // --- Definición de Columnas ---
     const columns = [
         { field: "codHu", headerName: "Código HU", width: 140, renderCell: (p) => <b>{p.value}</b> },
-        { field: "almacen", headerName: "Almacén Origen", width: 180, valueGetter: (p) => p.row.almacen?.nombreSede || "N/A" },
+        { field: "almacen", headerName: "Almacén Origen", width: 180, valueGetter: (value, row) => row?.almacen?.nombreSede || "N/A" },
         { field: "tipoIndicador", headerName: "Tipo Carga", width: 130 },
         {
-            field: "fechaVencimiento",
-            headerName: "Vencimiento",
-            width: 120,
-            valueFormatter: (p) => p.value ? new Date(p.value).toLocaleDateString() : "---"
+            field: "fechaVencimiento", headerName: "Vencimiento", width: 120,
+            valueFormatter: (value) => value ? new Date(value).toLocaleDateString() : "---"
         },
         {
-            field: "estado",
-            headerName: "Estado",
-            width: 140,
+            field: "estado", headerName: "Estado", width: 140,
             renderCell: (params) => (
                 <Chip
                     label={params.value}
@@ -150,24 +168,37 @@ const PedidoMercaderia = () => {
         },
         {
             field: "acciones",
-            headerName: "Pedir",
+            headerName: "Acciones", // Cambié el nombre para ser más genérico
             type: "actions",
-            width: 100,
+            width: 120, // Aumenté un poco el ancho
             getActions: (params) => {
-                // Regla: Solo se pide si está COMPLETO o DISPONIBLE
-                const puedePedir = params.row.estado === "COMPLETO" || params.row.estado === "DISPONIBLE";
+                const puedePedir = params.row.estado === "COMPLETO" || params.row.estado === "QUIEBRE";
 
                 return [
-                    <Tooltip title={puedePedir ? "Pedir esta HU" : "No disponible para pedir"}>
+                    // Botón 1: Ver Información (Nuevo)
+                    <Tooltip title="Ver contenido y detalles">
+                        <IconButton
+                            onClick={() => handleVerDetalle(params.row)}
+                            sx={(theme) => ({
+                                color: theme.palette.info.main,
+                                '&:hover': { bgcolor: alpha(theme.palette.info.main, 0.1) }
+                            })}
+                        >
+                            <InfoIcon />
+                        </IconButton>
+                    </Tooltip>,
+
+                    // Botón 2: Pedir (Carrito)
+                    <Tooltip title={puedePedir ? "Pedir esta HU" : "No disponible"}>
                         <span>
                             <IconButton
                                 color="primary"
                                 disabled={!puedePedir}
                                 onClick={() => handleClickSolicitar(params.row)}
-                                sx={{
-                                    bgcolor: puedePedir ? 'rgba(25, 118, 210, 0.1)' : 'transparent',
-                                    '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.2)' }
-                                }}
+                                sx={(theme) => ({
+                                    bgcolor: puedePedir ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                                    '&:hover': { bgcolor: puedePedir ? alpha(theme.palette.primary.main, 0.2) : 'transparent' }
+                                })}
                             >
                                 <AddShoppingCartIcon />
                             </IconButton>
@@ -190,42 +221,134 @@ const PedidoMercaderia = () => {
                 getRowId={(row) => row.id}
             />
 
+            {/* --- MODAL DE DETALLE (Información) --- */}
+            <Dialog
+                open={openDetalle}
+                onClose={handleCloseDetalle}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle sx={{ bgcolor: "background.paper", display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                        <InfoIcon color="info" />
+                        <Typography variant="h6">Detalle de Paleta: {detalleData?.codHu}</Typography>
+                    </Box>
+                    <IconButton onClick={handleCloseDetalle} size="small">
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+
+                <DialogContent dividers sx={{ bgcolor: "background.default" }}>
+                    {/* Datos Generales */}
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                        <Grid item xs={12} sm={4}>
+                            <Typography variant="caption" color="text.secondary">Almacén de Origen</Typography>
+                            <Typography variant="body1" fontWeight="bold">
+                                {detalleData?.almacen?.nombreSede || "---"}
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <Typography variant="caption" color="text.secondary">Tipo de Carga</Typography>
+                            <Typography variant="body1" fontWeight="bold">
+                                {detalleData?.tipoIndicador}
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <Typography variant="caption" color="text.secondary">Estado</Typography>
+                            <Box>
+                                <Chip
+                                    label={detalleData?.estado}
+                                    color={getStatusColor(detalleData?.estado)}
+                                    size="small"
+                                    variant="outlined"
+                                />
+                            </Box>
+                        </Grid>
+                    </Grid>
+
+                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+                        Lista de Productos
+                    </Typography>
+
+                    {/* Tabla de Productos dentro del Modal */}
+                    <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                            <TableHead sx={(theme) => ({ bgcolor: theme.palette.action.hover })}>
+                                <TableRow>
+                                    <TableCell><strong>SKU</strong></TableCell>
+                                    <TableCell><strong>Producto</strong></TableCell>
+                                    <TableCell align="center"><strong>Cantidad</strong></TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {/* Asumimos que el backend devuelve un array 'detalles' dentro del objeto HU. 
+                                    Si no es así, tendrías que hacer una query extra aquí. */}
+                                {detalleData?.detalle && detalleData.detalle.length > 0 ? (
+                                    detalleData.detalle.map((det, index) => (
+                                        <TableRow key={index}>
+                                            {/* Ajusta 'det.producto.sku' según tu estructura real */}
+                                            <TableCell>{det.producto?.sku || "---"}</TableCell>
+                                            <TableCell>{det.producto?.nombre || "Producto desconocido"}</TableCell>
+                                            <TableCell align="center">
+                                                <Typography fontWeight="bold">{det.cantidad}</Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3} align="center" sx={{ py: 3, color: "text.secondary" }}>
+                                            No hay detalles de productos disponibles.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </DialogContent>
+
+                <DialogActions sx={{ bgcolor: "background.paper", p: 2 }}>
+                    <Button onClick={handleCloseDetalle} color="inherit" variant="outlined">
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             {/* --- DRAWER LATERAL (Solicitud) --- */}
             <Drawer
                 anchor="right"
                 open={openDrawer}
                 onClose={handleCloseDrawer}
-                // ✅ CORRECCIÓN DE SUPERPOSICIÓN:
-                // zIndex alto asegura que esté por encima del Sidebar/Footer del Dashboard
                 sx={{
                     zIndex: (theme) => theme.zIndex.drawer + 1000,
                 }}
                 PaperProps={{
                     sx: {
-                        width: { xs: "100%", sm: 400 }, // Full screen en móvil, 400px en escritorio
+                        width: { xs: "100%", sm: 400 },
                         p: 0,
-                        boxShadow: "-4px 0px 20px rgba(0,0,0,0.2)"
+                        boxShadow: (theme) => theme.shadows[10],
                     }
                 }}
             >
+                {/* ... (Todo el contenido de tu Drawer anterior se mantiene igual) ... */}
                 {/* Cabecera */}
-                <Box sx={{ p: 3, bgcolor: "primary.main", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Box sx={{ p: 3, bgcolor: "primary.main", color: "primary.contrastText", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Box display="flex" alignItems="center" gap={1}>
                         <AddShoppingCartIcon />
                         <Typography variant="h6" fontWeight="bold">
                             Confirmar Pedido
                         </Typography>
                     </Box>
-                    <IconButton onClick={handleCloseDrawer} sx={{ color: "white" }}>
+                    <IconButton onClick={handleCloseDrawer} sx={{ color: "inherit" }}>
                         <CloseIcon />
                     </IconButton>
                 </Box>
 
-                {/* Cuerpo del Formulario */}
                 <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3, flex: 1, overflowY: "auto" }}>
-
-                    {/* Resumen de la HU */}
-                    <Box sx={{ bgcolor: "#f5f5f5", p: 2, borderRadius: 2, border: "1px solid #e0e0e0" }}>
+                    {/* Resumen */}
+                    <Box sx={(theme) => ({
+                        bgcolor: theme.palette.mode === 'dark' ? 'action.hover' : '#f5f5f5',
+                        p: 2, borderRadius: 2, border: 1, borderColor: 'divider'
+                    })}>
                         <Typography variant="caption" color="text.secondary" textTransform="uppercase" fontWeight="bold">
                             Paleta Seleccionada
                         </Typography>
@@ -247,7 +370,6 @@ const PedidoMercaderia = () => {
 
                     <Divider>DATOS DE ENVÍO</Divider>
 
-                    {/* Selector Sede Destino */}
                     <Box display="flex" alignItems="flex-end" gap={2}>
                         <StoreIcon color="action" sx={{ mb: 0.5 }} />
                         <TextField
@@ -258,6 +380,9 @@ const PedidoMercaderia = () => {
                             value={idSedeDestino}
                             onChange={(e) => setIdSedeDestino(e.target.value)}
                             helperText="Seleccione la tienda que recibe"
+                            SelectProps={{
+                                MenuProps: { sx: { zIndex: (theme) => theme.zIndex.drawer + 1002 } }
+                            }}
                         >
                             {sedes.map((sede) => (
                                 <MenuItem key={sede.idSede} value={sede.idSede}>
@@ -267,7 +392,6 @@ const PedidoMercaderia = () => {
                         </TextField>
                     </Box>
 
-                    {/* Selector Fecha */}
                     <Box display="flex" alignItems="flex-end" gap={2}>
                         <EventIcon color="action" sx={{ mb: 0.5 }} />
                         <TextField
@@ -283,24 +407,20 @@ const PedidoMercaderia = () => {
                     </Box>
                 </Box>
 
-                {/* Pie de Página (Botones) */}
-                <Box sx={{ p: 3, borderTop: "1px solid #e0e0e0", bgcolor: "#fafafa" }}>
+                <Box sx={(theme) => ({
+                    p: 3, borderTop: 1, borderColor: 'divider',
+                    bgcolor: theme.palette.mode === 'dark' ? 'background.default' : '#fafafa'
+                })}>
                     <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        startIcon={<SendIcon />}
-                        onClick={handleConfirmarPedido}
-                        disabled={solicitarMutation.isPending}
+                        fullWidth variant="contained" size="large" startIcon={<SendIcon />}
+                        onClick={handleConfirmarPedido} disabled={solicitarMutation.isPending}
                         sx={{ py: 1.5, mb: 1.5, fontWeight: "bold" }}
                     >
                         {solicitarMutation.isPending ? "Procesando..." : "Confirmar Pedido"}
                     </Button>
                     <Button
-                        fullWidth
-                        variant="outlined"
-                        color="inherit"
-                        onClick={handleCloseDrawer}
+                        fullWidth variant="outlined" color="inherit" onClick={handleCloseDrawer}
+                        sx={{ borderColor: 'divider' }}
                     >
                         Cancelar
                     </Button>

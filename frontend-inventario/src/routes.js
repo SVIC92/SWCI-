@@ -44,6 +44,7 @@ import IngresarCategoria from "./pages/Mod. Producto/IngresarCategoria";
 import DashboardProveedores from "./components/Dashboards/Modulos/dashboardProveedores";
 import ListaProveedores from "./pages/Mod. Proveedor/ListaProveedores";
 import IngresarProveedor from "./pages/Mod. Proveedor/IngresarProveedor";
+import PedidoMercaderia from "./pages/Mod. Proveedor/PedidoMercaderia";
 import DashboardSedes from "./components/Dashboards/Modulos/dashboardSedes";
 import ListaSedes from "./pages/Mod. Sedes/ListaSedes";
 import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
@@ -291,6 +292,12 @@ const RutasProveedores = [
     "/proveedores/nuevo",
     ADMIN_OP_RECEPCION,
     IngresarProveedor
+  ),
+  RutaProtegida(
+    "pedidoMercaderia",
+    "/proveedores/pedido-mercaderia",
+    ADMIN_OP_RECEPCION,
+    PedidoMercaderia
   ),
 ];
 

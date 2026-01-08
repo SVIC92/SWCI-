@@ -108,13 +108,13 @@ const GestionHu = () => {
             field: "almacen",
             headerName: "Origen",
             width: 180,
-            valueGetter: (params) => params.row.almacen?.nombreSede || "N/A",
+            valueGetter: (value, row) => row.almacen?.nombreSede || "N/A",
         },
         {
             field: "sedeDestino",
             headerName: "Destino",
             width: 180,
-            valueGetter: (params) => params.row.sedeDestino?.nombreSede || "---",
+            valueGetter: (value, row) => row.sedeDestino?.nombreSede || "---",
         },
         {
             field: "estado",
@@ -139,9 +139,9 @@ const GestionHu = () => {
             field: "fechaSolicitada",
             headerName: "Fecha Solicitada",
             width: 180,
-            valueFormatter: (params) => {
-                if (!params.value) return "---";
-                return new Date(params.value).toLocaleString();
+            valueFormatter: (value) => {
+                if (!value) return "---";
+                return new Date(value).toLocaleString();
             },
         },
         {

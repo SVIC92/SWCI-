@@ -2,8 +2,11 @@ package com.inventario.backend_inventario.Service.Impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -150,31 +153,51 @@ public class HuServiceImpl implements HuService {
 
     private void agregarProductosAHu(Hu hu, List<DetalleHuItemDto> nuevosDetalles) {
         List<DetalleHu> detallesActuales = hu.getDetalle();
-        if (detallesActuales == null)
+        if (detallesActuales == null) {
             detallesActuales = new ArrayList<>();
+            hu.setDetalle(detallesActuales);
+        }
+        Map<Long, Integer> mapaNuevos = nuevosDetalles.stream()
+                .collect(Collectors.toMap(DetalleHuItemDto::getIdProducto, DetalleHuItemDto::getCantidad));
+        Iterator<DetalleHu> iterator = detallesActuales.iterator();
+        while (iterator.hasNext()) {
+            DetalleHu detalleExistente = iterator.next();
+            Long idProdExistente = detalleExistente.getProducto().getId_producto();
 
-        for (DetalleHuItemDto item : nuevosDetalles) {
-            Producto prod = productoRepository.findById(item.getIdProducto())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Producto ID " + item.getIdProducto() + " no encontrado"));
-            Optional<DetalleHu> existente = detallesActuales.stream()
-                    .filter(d -> d.getProducto().getId_producto().equals(prod.getId_producto()))
-                    .findFirst();
+            if (mapaNuevos.containsKey(idProdExistente)) {
+                // A) EXISTE EN AMBOS: Actualizamos la cantidad (NO SUMAMOS, REEMPLAZAMOS)
+                Integer nuevaCantidad = mapaNuevos.get(idProdExistente);
+                detalleExistente.setCantidad(nuevaCantidad);
 
-            if (existente.isPresent()) {
-                DetalleHu detalle = existente.get();
-                detalle.setCantidad(detalle.getCantidad() + item.getCantidad());
-                detalleHuRepository.save(detalle);
+                // Quitamos del mapa para saber que este ya lo procesamos
+                mapaNuevos.remove(idProdExistente);
             } else {
-                DetalleHu nuevo = new DetalleHu();
-                nuevo.setHu(hu);
-                nuevo.setProducto(prod);
-                nuevo.setCantidad(item.getCantidad());
-                detalleHuRepository.save(nuevo);
-                detallesActuales.add(nuevo);
+                detalleHuRepository.delete(detalleExistente); // Borrar de DB explícitamente si es necesario
+                iterator.remove(); // Borrar de la lista en memoria
             }
         }
-        hu.setDetalle(detallesActuales);
+
+        // 3. INSERTAR LOS NUEVOS
+        // Los que quedaron en el mapa son productos nuevos que no existían en la HU
+        for (Map.Entry<Long, Integer> entry : mapaNuevos.entrySet()) {
+            Long idProducto = entry.getKey();
+            Integer cantidad = entry.getValue();
+
+            Producto prod = productoRepository.findById(idProducto)
+                    .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
+
+            DetalleHu nuevoDetalle = new DetalleHu();
+            nuevoDetalle.setHu(hu);
+            nuevoDetalle.setProducto(prod);
+            nuevoDetalle.setCantidad(cantidad); // Asignamos la cantidad directa
+
+            detallesActuales.add(nuevoDetalle);
+        }
+
+        // Al tener CascadeType.ALL en la entidad Hu, al guardar la Hu se guardan los
+        // cambios en detalles
+        // Pero si quieres asegurar, puedes guardar los nuevos.
+        detalleHuRepository.saveAll(detallesActuales);
     }
 
     @Override
@@ -204,7 +227,7 @@ public class HuServiceImpl implements HuService {
         Hu hu = huRepository.findById(idHu)
                 .orElseThrow(() -> new EntityNotFoundException("HU no encontrada"));
 
-        if (hu.getEstado() != EstadoHu.COMPLETO || hu.getEstado() != EstadoHu.QUIEBRE) {
+        if (hu.getEstado() == EstadoHu.COMPLETO || hu.getEstado() == EstadoHu.QUIEBRE) {
             throw new IllegalStateException(
                     "La HU no está en un estado válido para ser solicitada, espere hasta que esté COMPLETO o QUIEBRE (Estado actual: "
                             + hu.getEstado() + ")");

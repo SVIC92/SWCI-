@@ -18,7 +18,7 @@ const DashboardProveedores = () => {
       id: "Pedido_mercaderia",
       titulo: "Pedido de Mercadería",
       descripcion: "Realiza un pedido de mercadería HU al almacen de su elección.",
-      ruta: "/proveedores/pedido",
+      ruta: "/proveedores/pedido-mercaderia",
     },
     {
       id: "Generacion-OC",

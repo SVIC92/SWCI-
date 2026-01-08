@@ -12,7 +12,7 @@ import { getAlmacenes } from "../../api/sedeApi";
 import { getProductos } from "../../api/productoApi";
 
 // Utils
-import { huSchema } from "../../Utils/huShema"; // Asegúrate de que el nombre del archivo sea correcto
+import { huSchema } from "../../Utils/huSchema"; // Asegúrate de que el nombre del archivo sea correcto
 
 // MUI Components
 import {
@@ -41,6 +41,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
 
 const MySwal = withReactContent(Swal);
 
@@ -149,213 +150,217 @@ const CrearHu = () => {
     };
 
     return (
-        <Box sx={{ p: 3, maxWidth: 1200, margin: "0 auto" }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
-                <Button
-                    variant="outlined"
-                    startIcon={<ArrowBackIcon />}
-                    onClick={() => navigate("/hu/gestion")} // Corregí la ruta de retorno
-                >
-                    Volver
-                </Button>
-                <Typography variant="h5" fontWeight="bold">
-                    Crear Nueva Paleta (HU)
-                </Typography>
-            </Box>
+        <>
+            <LayoutDashboard>
+                <Box sx={{ p: 3, maxWidth: 1200, margin: "0 auto" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<ArrowBackIcon />}
+                            onClick={() => navigate("/hu/gestion")} // Corregí la ruta de retorno
+                        >
+                            Volver
+                        </Button>
+                        <Typography variant="h5" fontWeight="bold">
+                            Crear Nueva Paleta (HU)
+                        </Typography>
+                    </Box>
 
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <Grid container spacing={3}>
-                    {/* PANEL IZQUIERDO: CABECERA */}
-                    <Grid item xs={12} md={5}>
-                        <Card elevation={3}>
-                            <CardContent>
-                                <Typography variant="h6" color="primary" gutterBottom>
-                                    Datos Generales
-                                </Typography>
-                                <Divider sx={{ mb: 2 }} />
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <Grid container spacing={3}>
+                            {/* PANEL IZQUIERDO: CABECERA */}
+                            <Grid item xs={20} md={5}>
+                                <Card elevation={3} sx={{ height: "100%" , width: "119%"}}>
+                                    <CardContent>
+                                        <Typography variant="h6" color="primary" gutterBottom>
+                                            Datos Generales
+                                        </Typography>
+                                        <Divider sx={{ mb: 2 }} />
 
-                                <Grid container spacing={2}>
-                                    {/* Código HU (Autogenerado) */}
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            fullWidth
-                                            label="Código HU"
-                                            value="Autogenerado al guardar"
-                                            disabled
-                                            variant="filled"
-                                            helperText="El sistema asignará el correlativo automáticamente."
-                                        />
-                                    </Grid>
-
-                                    {/* Almacén Origen */}
-                                    <Grid item xs={12}>
-                                        <Controller
-                                            name="idAlmacen"
-                                            control={control}
-                                            render={({ field }) => (
+                                        <Grid container spacing={2}>
+                                            {/* Código HU (Autogenerado) */}
+                                            <Grid item xs={12}>
                                                 <TextField
-                                                    {...field}
+                                                    fullWidth
+                                                    label="Código HU"
+                                                    value="Autogenerado al guardar"
+                                                    disabled
+                                                    variant="filled"
+                                                    helperText="El sistema asignará el correlativo automáticamente."
+                                                />
+                                            </Grid>
+
+                                            {/* Almacén Origen */}
+                                            <Grid item xs={12} sx={{width:"20%"}}>
+                                                <Controller
+                                                    name="idAlmacen"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <TextField
+                                                            {...field}
+                                                            select
+                                                            fullWidth
+                                                            label="Almacén de Origen"
+                                                            error={!!errors.idAlmacen}
+                                                            helperText={errors.idAlmacen?.message}
+                                                        >
+                                                            {almacenes.map((sede) => (
+                                                                <MenuItem key={sede.idSede} value={sede.idSede}>
+                                                                    {sede.nombreSede}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </TextField>
+                                                    )}
+                                                />
+                                            </Grid>
+
+                                            {/* Tipo Indicador */}
+                                            <Grid item xs={12}>
+                                                <TextField
                                                     select
                                                     fullWidth
-                                                    label="Almacén de Origen"
-                                                    error={!!errors.idAlmacen}
-                                                    helperText={errors.idAlmacen?.message}
+                                                    label="Tipo de Contenido"
+                                                    {...register("tipoIndicador")}
+                                                    defaultValue="Estándar"
                                                 >
-                                                    {almacenes.map((sede) => (
-                                                        <MenuItem key={sede.idSede} value={sede.idSede}>
-                                                            {sede.nombreSede}
-                                                        </MenuItem>
-                                                    ))}
+                                                    <MenuItem value="Estándar">Estándar</MenuItem>
+                                                    <MenuItem value="Frágil">Frágil</MenuItem>
+                                                    <MenuItem value="Refrigerado">Refrigerado</MenuItem>
+                                                    <MenuItem value="Alto Valor">Alto Valor</MenuItem>
+                                                    <MenuItem value="Medio HU">Medio HU</MenuItem>
+                                                    <MenuItem value="Mixto">Mixto</MenuItem>
+                                                    <MenuItem value="Monoproducto">Monoproducto</MenuItem>
                                                 </TextField>
-                                            )}
-                                        />
-                                    </Grid>
+                                            </Grid>
 
-                                    {/* Tipo Indicador */}
-                                    <Grid item xs={12}>
-                                        <TextField
-                                            select
-                                            fullWidth
-                                            label="Tipo de Contenido"
-                                            {...register("tipoIndicador")}
-                                            defaultValue="Estándar"
-                                        >
-                                            <MenuItem value="Estándar">Estándar</MenuItem>
-                                            <MenuItem value="Frágil">Frágil</MenuItem>
-                                            <MenuItem value="Refrigerado">Refrigerado</MenuItem>
-                                            <MenuItem value="Alto Valor">Alto Valor</MenuItem>
-                                            <MenuItem value="Medio HU">Medio HU</MenuItem>
-                                            <MenuItem value="Mixto">Mixto</MenuItem>
-                                            <MenuItem value="Monoproducto">Monoproducto</MenuItem>
-                                        </TextField>
-                                    </Grid>
+                                            {/* Fechas */}
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    fullWidth
+                                                    type="datetime-local"
+                                                    label="Fecha Solicitada"
+                                                    InputLabelProps={{ shrink: true }}
+                                                    {...register("fechaSolicitada")}
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    fullWidth
+                                                    type="date"
+                                                    label="Fecha Vencimiento"
+                                                    InputLabelProps={{ shrink: true }}
+                                                    {...register("fechaVencimiento")}
+                                                />
+                                            </Grid>
+                                        </Grid>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
 
-                                    {/* Fechas */}
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            fullWidth
-                                            type="datetime-local"
-                                            label="Fecha Solicitada"
-                                            InputLabelProps={{ shrink: true }}
-                                            {...register("fechaSolicitada")}
-                                        />
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <TextField
-                                            fullWidth
-                                            type="date"
-                                            label="Fecha Vencimiento"
-                                            InputLabelProps={{ shrink: true }}
-                                            {...register("fechaVencimiento")}
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                            {/* PANEL DERECHO: PRODUCTOS */}
+                            <Grid item xs={12} md={7}>
+                                <Card elevation={3} sx={{ height: "100%" , width: "320%"}}>
+                                    <CardContent>
+                                        <Typography variant="h6" color="primary" gutterBottom>
+                                            Contenido de la Paleta
+                                        </Typography>
+                                        <Divider sx={{ mb: 2 }} />
 
-                    {/* PANEL DERECHO: PRODUCTOS */}
-                    <Grid item xs={12} md={7}>
-                        <Card elevation={3} sx={{ height: "100%" }}>
-                            <CardContent>
-                                <Typography variant="h6" color="primary" gutterBottom>
-                                    Contenido de la Paleta
-                                </Typography>
-                                <Divider sx={{ mb: 2 }} />
+                                        {/* Formulario Productos */}
+                                        <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start", mb: 3, flexDirection: { xs: "column", sm: "row" } }}>
+                                            <Autocomplete
+                                                options={productos}
+                                                getOptionLabel={(option) => `${option.nombre} (SKU: ${option.sku})`}
+                                                value={productoSeleccionado}
+                                                onChange={(_, newValue) => setProductoSeleccionado(newValue)}
+                                                loading={loadingProductos}
+                                                sx={{ flex: 2, width: "100%" }}
+                                                renderInput={(params) => (
+                                                    <TextField {...params} label="Buscar Producto" placeholder="Nombre o SKU" />
+                                                )}
+                                            />
 
-                                {/* Formulario Productos */}
-                                <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start", mb: 3, flexDirection: { xs: "column", sm: "row" } }}>
-                                    <Autocomplete
-                                        options={productos}
-                                        getOptionLabel={(option) => `${option.nombreProducto} (SKU: ${option.sku})`}
-                                        value={productoSeleccionado}
-                                        onChange={(_, newValue) => setProductoSeleccionado(newValue)}
-                                        loading={loadingProductos}
-                                        sx={{ flex: 2, width: "100%" }}
-                                        renderInput={(params) => (
-                                            <TextField {...params} label="Buscar Producto" placeholder="Nombre o SKU" />
-                                        )}
-                                    />
+                                            <TextField
+                                                label="Cant."
+                                                type="number"
+                                                sx={{ width: { xs: "100%", sm: "100px" } }}
+                                                value={cantidadInput}
+                                                onChange={(e) => setCantidadInput(e.target.value)}
+                                            />
 
-                                    <TextField
-                                        label="Cant."
-                                        type="number"
-                                        sx={{ width: { xs: "100%", sm: "100px" } }}
-                                        value={cantidadInput}
-                                        onChange={(e) => setCantidadInput(e.target.value)}
-                                    />
+                                            <Button
+                                                variant="contained"
+                                                color="secondary"
+                                                sx={{ height: 56, minWidth: 100 }}
+                                                onClick={handleAgregarProducto}
+                                                startIcon={<AddCircleOutlineIcon />}
+                                            >
+                                                Añadir
+                                            </Button>
+                                        </Box>
 
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        sx={{ height: 56, minWidth: 100 }}
-                                        onClick={handleAgregarProducto}
-                                        startIcon={<AddCircleOutlineIcon />}
-                                    >
-                                        Añadir
-                                    </Button>
-                                </Box>
-
-                                {/* Tabla Productos */}
-                                <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
-                                    <Table size="small" stickyHeader>
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>SKU</TableCell>
-                                                <TableCell>Producto</TableCell>
-                                                <TableCell align="center">Cantidad</TableCell>
-                                                <TableCell align="center">Acción</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {detalles.length === 0 ? (
-                                                <TableRow>
-                                                    <TableCell colSpan={4} align="center" sx={{ py: 3, color: "text.secondary" }}>
-                                                        No hay productos agregados aún.
-                                                    </TableCell>
-                                                </TableRow>
-                                            ) : (
-                                                detalles.map((item) => (
-                                                    <TableRow key={item.idProducto}>
-                                                        <TableCell>{item.sku}</TableCell>
-                                                        <TableCell>{item.nombre}</TableCell>
-                                                        <TableCell align="center">
-                                                            <Typography fontWeight="bold">{item.cantidad}</Typography>
-                                                        </TableCell>
-                                                        <TableCell align="center">
-                                                            <IconButton
-                                                                color="error"
-                                                                size="small"
-                                                                onClick={() => handleEliminarDetalle(item.idProducto)}
-                                                            >
-                                                                <DeleteIcon fontSize="small" />
-                                                            </IconButton>
-                                                        </TableCell>
+                                        {/* Tabla Productos */}
+                                        <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
+                                            <Table size="small" stickyHeader>
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell>SKU</TableCell>
+                                                        <TableCell>Producto</TableCell>
+                                                        <TableCell align="center">Cantidad</TableCell>
+                                                        <TableCell align="center">Acción</TableCell>
                                                     </TableRow>
-                                                ))
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {detalles.length === 0 ? (
+                                                        <TableRow>
+                                                            <TableCell colSpan={4} align="center" sx={{ py: 3, color: "text.secondary" }}>
+                                                                No hay productos agregados aún.
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ) : (
+                                                        detalles.map((item) => (
+                                                            <TableRow key={item.idProducto}>
+                                                                <TableCell>{item.sku}</TableCell>
+                                                                <TableCell>{item.nombre}</TableCell>
+                                                                <TableCell align="center">
+                                                                    <Typography fontWeight="bold">{item.cantidad}</Typography>
+                                                                </TableCell>
+                                                                <TableCell align="center">
+                                                                    <IconButton
+                                                                        color="error"
+                                                                        size="small"
+                                                                        onClick={() => handleEliminarDetalle(item.idProducto)}
+                                                                    >
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))
+                                                    )}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        </Grid>
 
-                <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        size="large"
-                        startIcon={<SaveIcon />}
-                        disabled={createHuMutation.isPending}
-                        sx={{ px: 5, py: 1.5, fontSize: "1.1rem" }}
-                    >
-                        {createHuMutation.isPending ? "Procesando..." : "Crear HU"}
-                    </Button>
+                        <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                size="large"
+                                startIcon={<SaveIcon />}
+                                disabled={createHuMutation.isPending}
+                                sx={{ px: 5, py: 1.5, fontSize: "1.1rem" }}
+                            >
+                                {createHuMutation.isPending ? "Procesando..." : "Crear HU"}
+                            </Button>
+                        </Box>
+                    </form>
                 </Box>
-            </form>
-        </Box>
+            </LayoutDashboard>
+        </>
     );
 };
 
