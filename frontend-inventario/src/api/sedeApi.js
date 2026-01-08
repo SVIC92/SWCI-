@@ -4,6 +4,10 @@ export const getSedes = async () =>{
     const response = await axiosInstance.get("/sedes");
     return response.data;
 }
+export const getAlmacenes = async () => {
+  const response = await axiosInstance.get("/sedes/almacenes");
+  return response.data;
+};
 export const getSede = async (id) => {
     const response = await axiosInstance.get(`/sedes/${id}`);
     return response.data;

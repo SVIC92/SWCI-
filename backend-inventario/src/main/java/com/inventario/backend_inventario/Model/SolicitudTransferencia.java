@@ -1,6 +1,8 @@
 package com.inventario.backend_inventario.Model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.inventario.backend_inventario.Enum.EstadoSolicitud;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.List;
@@ -35,10 +37,6 @@ public class SolicitudTransferencia {
     @OneToMany(mappedBy = "solicitud", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<DetalleSolicitud> detalles;
-
-    public enum EstadoSolicitud {
-        PENDIENTE, APROBADO, RECHAZADO
-    }
 
     @Column(length = 500)
     private String motivoRechazo;

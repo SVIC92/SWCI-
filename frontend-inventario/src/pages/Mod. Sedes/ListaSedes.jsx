@@ -3,14 +3,17 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getSedes, deleteSede, updateSede } from "../../api/sedeApi";
+import { getSedes, getAlmacenes, deleteSede, updateSede } from "../../api/sedeApi";
 import {
-  Stack,
-  Tooltip, 
-  IconButton, 
+	Stack,
+	Tooltip,
+	IconButton,
+	Switch,           // --- NUEVO
+	FormControlLabel, // --- NUEVO
+	Box               // --- NUEVO
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete"; 
+import DeleteIcon from "@mui/icons-material/Delete";
 import TablaLista from "../../components/TablaLista";
 import FormularioDialogo from "../../components/FomularioDialogo";
 import { sedeSchema } from "../../Utils/sedeSchema";
@@ -20,37 +23,41 @@ const MySwal = withReactContent(Swal);
 const ListaSedes = () => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const [mostrarAlmacenes, setMostrarAlmacenes] = useState(false);
 	const [openEditDialog, setOpenEditDialog] = useState(false);
 	const [sedeSeleccionada, setSedeSeleccionada] = useState(null);
 
+	// --- MODIFICADO: Consulta dinámica según el switch ---
 	const {
 		data: sedesData,
 		isLoading,
-		isError,
-		error,
 		refetch,
 	} = useQuery({
-		queryKey: ["sedes"],
-		queryFn: getSedes,
+		queryKey: ["sedes", mostrarAlmacenes], // Agregamos la dependencia para refrescar al cambiar
+		queryFn: mostrarAlmacenes ? getAlmacenes : getSedes, 
 	});
+
 	const sedes = sedesData || [];
+
 	const sedeFields = [
-		{ name: "nombreSede", label: "Sede", type: "text" },
+		{ name: "nombreSede", label: "Nombre", type: "text" },
 		{ name: "direccion", label: "Dirección", type: "text" },
 		{ name: "anexo", label: "Anexo", type: "text" },
 	];
+
 	const deleteSedeMutation = useMutation({
 		mutationFn: deleteSede,
 		onSuccess: () => {
 			queryClient.invalidateQueries(["sedes"]);
-			MySwal.fire("Eliminado", "La sede fue eliminada correctamente", "success");
+			MySwal.fire("Eliminado", "El registro fue eliminado correctamente", "success");
 		},
 		onError: (err) => {
-			console.error("Error al eliminar sede:", err);
-			const mensaje = err.response?.data?.message || "No se pudo eliminar la sede";
+			console.error("Error al eliminar:", err);
+			const mensaje = err.response?.data?.message || "No se pudo eliminar";
 			MySwal.fire("Error", mensaje, "error");
 		},
 	});
+
 	const updateSedeMutation = useMutation({
 		mutationFn: (variables) => updateSede(variables.id, variables.data),
 		onSuccess: () => {
@@ -58,21 +65,22 @@ const ListaSedes = () => {
 			setOpenEditDialog(false);
 			MySwal.fire(
 				"Actualizado",
-				"La sede se actualizó correctamente",
+				"Se actualizó correctamente",
 				"success"
 			);
 		},
 		onError: (err) => {
-			console.error("Error al actualizar sede:", err);
+			console.error("Error al actualizar:", err);
 			const mensaje =
-				err.response?.data?.message || "No se pudo actualizar la sede";
+				err.response?.data?.message || "No se pudo actualizar";
 			MySwal.fire("Error", mensaje, "error");
 		},
 	});
+
 	const handleEliminar = async (id) => {
 		const resultado = await MySwal.fire({
-			title: "¿Eliminar sede?",
-			text: "Esta acción eliminará la sede seleccionada.",
+			title: mostrarAlmacenes ? "¿Eliminar Almacén?" : "¿Eliminar Sede?",
+			text: "Esta acción no se puede deshacer.",
 			icon: "warning",
 			showCancelButton: true,
 			confirmButtonText: "Sí, eliminar",
@@ -92,78 +100,96 @@ const ListaSedes = () => {
 			nombreSede: sede.nombreSede,
 			direccion: sede.direccion,
 			anexo: sede.anexo,
+			tipo: sede.tipo
 		});
 		setOpenEditDialog(true);
 	};
+
 	const onSaveEdit = (formData) => {
 		const payload = {
 			nombreSede: formData.nombreSede,
 			direccion: formData.direccion,
 			anexo: formData.anexo,
+			tipo: mostrarAlmacenes ? "Almacén" : "Sede"
 		};
 		updateSedeMutation.mutate({
 			id: sedeSeleccionada.idSede,
 			data: payload,
 		});
 	};
+
 	const columns = [
-		{ 
-		field: "idSede", 
-		headerName: "ID", 
-		width: 80 
-		},
-		{ 
-		field: "nombreSede", 
-		headerName: "Sede", 
-		minWidth: 200,
-		flex: 1 
+		{
+			field: "idSede",
+			headerName: "ID",
+			width: 80
 		},
 		{
-		field: "direccion", 
-		headerName: "Dirección", 
-		minWidth: 250,
-		flex: 1
-		},
-		{ 
-		field: "anexo", 
-		headerName: "Anexo", 
-		width: 120 
+			field: "nombreSede",
+			headerName: mostrarAlmacenes ? "Almacén" : "Sede",
+			minWidth: 200,
+			flex: 1
 		},
 		{
-		field: "acciones",
-		headerName: "Acciones",
-		type: "actions",
-		width: 100,
-		align: "center",
-		headerAlign: "center",
-		renderCell: (params) => (
-			<Stack direction="row" spacing={0.5} justifyContent="center">
-			<Tooltip title="Editar">
-				<IconButton
-				size="small"
-				color="info"
-				onClick={() => handleEditar(params.row)} 
-				>
-				<EditIcon fontSize="small" />
-				</IconButton>
-			</Tooltip>
-			<Tooltip title="Eliminar">
-				<IconButton
-				size="small"
-				color="error"
-				onClick={() => handleEliminar(params.row.idSede)}
-				>
-				<DeleteIcon fontSize="small" />
-				</IconButton>
-			</Tooltip>
-			</Stack>
-		),
+			field: "direccion",
+			headerName: "Dirección",
+			minWidth: 250,
+			flex: 1
+		},
+		{
+			field: "anexo",
+			headerName: "Anexo",
+			width: 120
+		},
+		{
+			field: "acciones",
+			headerName: "Acciones",
+			type: "actions",
+			width: 100,
+			align: "center",
+			headerAlign: "center",
+			renderCell: (params) => (
+				<Stack direction="row" spacing={0.5} justifyContent="center">
+					<Tooltip title="Editar">
+						<IconButton
+							size="small"
+							color="info"
+							onClick={() => handleEditar(params.row)}
+						>
+							<EditIcon fontSize="small" />
+						</IconButton>
+					</Tooltip>
+					<Tooltip title="Eliminar">
+						<IconButton
+							size="small"
+							color="error"
+							onClick={() => handleEliminar(params.row.idSede)}
+						>
+							<DeleteIcon fontSize="small" />
+						</IconButton>
+					</Tooltip>
+				</Stack>
+			),
 		},
 	];
+
 	return (
 		<>
+			<Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1, px: 2 }}>
+				<FormControlLabel
+					control={
+						<Switch
+							checked={mostrarAlmacenes}
+							onChange={(e) => setMostrarAlmacenes(e.target.checked)}
+							color="primary"
+						/>
+					}
+					label={mostrarAlmacenes ? "Viendo: Almacenes" : "Viendo: Sedes"}
+				/>
+			</Box>
+
 			<TablaLista
-				title="Lista de Sedes"
+				title={mostrarAlmacenes ? "Lista de Almacenes" : "Lista de Sedes"}
 				columns={columns}
 				data={sedes}
 				isLoading={isLoading}
@@ -171,12 +197,12 @@ const ListaSedes = () => {
 				onAdd={() => navigate("/sedes/nuevo")}
 				onBack={() => navigate("/dashboard-sedes")}
 				getRowId={(row) => row.idSede}
-				addButtonLabel="Ingresar Nueva Sede"
+				addButtonLabel={mostrarAlmacenes ? "Ingresar Nuevo Almacén" : "Ingresar Nueva Sede"}
 			/>
 			<FormularioDialogo
 				open={openEditDialog}
 				onClose={() => setOpenEditDialog(false)}
-				title="Editar Sede"
+				title={mostrarAlmacenes ? "Editar Almacén" : "Editar Sede"}
 				fields={sedeFields}
 				validationSchema={sedeSchema}
 				initialValues={sedeSeleccionada}
@@ -184,7 +210,7 @@ const ListaSedes = () => {
 				isSaving={updateSedeMutation.isPending}
 			/>
 		</>
-		
+
 	);
 };
 

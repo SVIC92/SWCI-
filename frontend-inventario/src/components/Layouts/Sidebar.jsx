@@ -11,7 +11,7 @@ import {
 import {
   FaUsers, FaBoxes, FaChartBar, FaCog, FaBars, FaSignOutAlt,
   FaTags, FaStore, FaClipboardList, FaTruck, FaHome,
-  FaChevronLeft, FaRobot,
+  FaChevronLeft, FaRobot, FaPallet
 } from "react-icons/fa";
 
 const SIDEBAR_WIDTH = 250;
@@ -34,6 +34,7 @@ const getMenuItems = (rol) => {
       { icon: <FaRobot />, label: "IA", path: "/chat-ia" },
       { icon: <FaTags />, label: "Productos", path: "/dashboard-productos" },
       { icon: <FaStore />, label: "Sedes", path: "/dashboard-sedes" },
+      { icon: <FaPallet />, label: "Logistica", path: "/dashboard-logistica" },
       { icon: <FaBoxes />, label: "Inventario", path: "/dashboard-inventario" },
       { icon: <FaClipboardList />, label: "Conteo Inventario", path: "/dashboard-conteoinventario" },
       { icon: <FaChartBar />, label: "Reportes", path: "/dashboard-reportes" },
@@ -56,6 +57,11 @@ const getMenuItems = (rol) => {
       { icon: <FaClipboardList />, label: "Conteo Inventario", path: "/dashboard-conteoinventario" },
       { icon: <FaChartBar />, label: "Reportes", path: "/dashboard-reportes" },
     ],
+    "Jefe de Almacén": [
+      { icon: <FaHome />, label: "Inicio", path: "/dashboard-jefe-almacen" },
+      { icon: <FaRobot />, label: "IA", path: "/chat-ia" },
+      { icon: <FaPallet />, label: "Logistica", path: "/dashboard-logistica" },
+    ]
   };
   const baseMenu = allMenus[rol] || [
     { icon: <FaHome />, label: "Inicio", path: "/" },

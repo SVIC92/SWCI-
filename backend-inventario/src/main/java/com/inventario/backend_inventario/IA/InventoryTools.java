@@ -2,8 +2,8 @@ package com.inventario.backend_inventario.IA;
 
 import com.inventario.backend_inventario.Repository.*;
 import com.inventario.backend_inventario.Dto.SugerenciaCompraDto;
+import com.inventario.backend_inventario.Enum.EstadoSolicitud;
 import com.inventario.backend_inventario.Model.Inventario;
-import com.inventario.backend_inventario.Model.SolicitudTransferencia;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -196,7 +196,7 @@ public class InventoryTools {
     public record ResponseResumenSede(String resumen) {}
 
     @Bean
-    @Description("Genera un resumen rápido del estado actual de una sede (Valorizado, alertas, stock total)")
+    @Description("Genera un resumen rápido del estado actual de una sede (Valorizado, alertas, stock total), en formato de lista")
     public Function<RequestResumenSede, ResponseResumenSede> resumenEstadoSede() {
         return request -> {
             // Buscamos la sede en memoria (filtrando por nombre)
@@ -244,7 +244,7 @@ public class InventoryTools {
     public record ResponseInfoProducto(String fichaTecnica) {}
 
     @Bean
-    @Description("Obtiene la ficha técnica detallada de un producto: precios, códigos (SKU/EAN), marca y proveedor")
+    @Description("Obtiene la ficha técnica detallada de un producto: precios, códigos (SKU/EAN), marca y proveedor, en formato de lista")
     public Function<RequestInfoProducto, ResponseInfoProducto> obtenerInformacionProducto() {
         return request -> {
             var productos = productoRepository.buscarPorSimilitud(request.nombreProducto());
@@ -284,13 +284,13 @@ public class InventoryTools {
     public record ResponseTransferencias(String reporte) {}
 
     @Bean
-    @Description("Consulta las solicitudes de transferencia de mercadería según su estado (PENDIENTE, APROBADO, RECHAZADO)")
+    @Description("Consulta las solicitudes de transferencia de mercadería según su estado (PENDIENTE, APROBADO, RECHAZADO), en formato de lista")
     public Function<RequestTransferencias, ResponseTransferencias> consultarTransferencias() {
         return request -> {
             String estadoBusqueda = request.estado() != null ? request.estado().toUpperCase() : "PENDIENTE";
             
             try {
-                var estadoEnum = SolicitudTransferencia.EstadoSolicitud.valueOf(estadoBusqueda);
+                var estadoEnum = EstadoSolicitud.valueOf(estadoBusqueda);
                 var solicitudes = solicitudRepository.findByEstado(estadoEnum);
 
                 if (solicitudes.isEmpty()) {

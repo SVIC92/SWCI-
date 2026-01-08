@@ -26,7 +26,12 @@ public class SedeServiceImpl implements SedeService {
 
     @Override
     public List<Sede> obtenerTodasLasSedes() {
-        return sedeRepository.findAll();
+        return sedeRepository.findByTipo("Sede");
+    }
+    
+    @Override
+    public List<Sede> obtenerTodosLosAlmacenes() {
+        return sedeRepository.findByTipo("Almacén");
     }
 
     @Override
@@ -36,16 +41,29 @@ public class SedeServiceImpl implements SedeService {
 
     @Override
     public Sede guardarSede(Sede sede) {
+        if (sede.getTipo() == null || sede.getTipo().isEmpty()) {
+            sede.setTipo("Sede"); 
+        }
+
         Sede sedeGuardada = sedeRepository.save(sede);
 
         try {
             String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
             Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
 
-            String descripcion = "Creó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
+            String tipoEntidad = sedeGuardada.getTipo(); 
+            String descripcion = "Creó " + tipoEntidad + " '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "CREACIÓN", descripcion, "SEDES", "Sede", sedeGuardada.getIdSede().longValue(), "Sede creada con nombre: " + sedeGuardada.getNombreSede());
+                historialActividadService.registrarActividad(
+                    u, 
+                    "CREACIÓN", 
+                    descripcion, 
+                    "SEDES", 
+                    tipoEntidad,
+                    sedeGuardada.getIdSede().longValue(), 
+                    tipoEntidad + " creada con nombre: " + sedeGuardada.getNombreSede()
+                );
             });
 
         } catch (Exception e) {
@@ -58,19 +76,34 @@ public class SedeServiceImpl implements SedeService {
     public Sede actualizarSede(Integer id, Sede sedeDetalles) {
         Sede sedeExistente = sedeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sede no encontrada con el ID: " + id));
+        
         sedeExistente.setNombreSede(sedeDetalles.getNombreSede());
         sedeExistente.setDireccion(sedeDetalles.getDireccion());
         sedeExistente.setAnexo(sedeDetalles.getAnexo());
+
+        if (sedeDetalles.getTipo() != null) {
+            sedeExistente.setTipo(sedeDetalles.getTipo());
+        }
+
         Sede sedeGuardada = sedeRepository.save(sedeExistente);
 
         try {
             String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
             Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
 
-            String descripcion = "Actualizó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
+            String tipoEntidad = sedeGuardada.getTipo();
+            String descripcion = "Actualizó " + tipoEntidad + " '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ACTUALIZACIÓN", descripcion, "SEDES", "Sede", sedeGuardada.getIdSede().longValue(), "Nuevo nombre de sede: " + sedeGuardada.getNombreSede());
+                historialActividadService.registrarActividad(
+                    u, 
+                    "ACTUALIZACIÓN", 
+                    descripcion, 
+                    "SEDES", 
+                    tipoEntidad, 
+                    sedeGuardada.getIdSede().longValue(), 
+                    "Modificación de " + tipoEntidad + ": " + sedeGuardada.getNombreSede()
+                );
             });
 
         } catch (Exception e) {
@@ -78,7 +111,6 @@ public class SedeServiceImpl implements SedeService {
         }
         return sedeGuardada;
     }
-
     @Override
     public void eliminarSede(Integer id) {
         if (!sedeRepository.existsById(id)) {
@@ -90,10 +122,19 @@ public class SedeServiceImpl implements SedeService {
             String emailUsuario = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
             Optional<Usuario> usuarioActual = usuarioRepository.findByEmail(emailUsuario);
 
-            String descripcion = "Eliminó la sede '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
+            String tipoEntidad = sedeGuardada.getTipo();
+            String descripcion = "Eliminó " + tipoEntidad + " '" + sedeGuardada.getNombreSede() + "' (ID: " + sedeGuardada.getIdSede() + ").";
 
             usuarioActual.ifPresent(u -> {
-                historialActividadService.registrarActividad(u, "ELIMINACIÓN", descripcion, "SEDES", "Sede", sedeGuardada.getIdSede().longValue(), "Sede eliminada con nombre: " + sedeGuardada.getNombreSede());
+                historialActividadService.registrarActividad(
+                    u, 
+                    "ELIMINACIÓN", 
+                    descripcion, 
+                    "SEDES", 
+                    tipoEntidad, 
+                    sedeGuardada.getIdSede().longValue(), 
+                    tipoEntidad + " eliminada con nombre: " + sedeGuardada.getNombreSede()
+                );
             });
 
         } catch (Exception e) {

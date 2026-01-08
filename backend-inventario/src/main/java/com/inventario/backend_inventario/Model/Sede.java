@@ -28,4 +28,7 @@ public class Sede {
     @Column(name = "anexo_se", nullable = false, length = 7)
     @Pattern(regexp = "^[0-9]{7}$", message = "El anexo debe ser un número de 7 dígitos")
     private String anexo;
+
+    @Column(nullable = false) 
+    private String tipo = "Sede";
 }

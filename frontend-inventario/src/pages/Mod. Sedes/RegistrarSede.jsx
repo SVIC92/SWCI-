@@ -22,20 +22,22 @@ const RegistrarSede = () => {
 	} = useForm({
 		resolver: zodResolver(sedeSchema),
 		defaultValues: {
-		nombreSede: "",
-		direccion: "",
-		anexo: "",
-    }
+			nombreSede: "",
+			direccion: "",
+			anexo: "",
+			tipo: "Sede",
+		}
 	});
+
 	const createSedeMutation = useMutation({
 		mutationFn: createSede,
 		onSuccess: () => {
-			MySwal.fire("Éxito", "Sede registrada correctamente", "success");
-			queryClient.invalidateQueries(["sedes"]); 
+			MySwal.fire("Éxito", "Registrado correctamente", "success");
+			queryClient.invalidateQueries(["sedes"]);
 			reset();
 		},
 		onError: (error) => {
-			console.error("Error al registrar la sede:", error);
+			console.error("Error al registrar:", error);
 			if (error.response?.data?.errors) {
 				const errores = error.response.data.errors;
 				const mensajes = Object.entries(errores)
@@ -48,14 +50,16 @@ const RegistrarSede = () => {
 				});
 			} else {
 				const mensaje =
-					error.response?.data?.message || "No se pudo registrar la sede";
+					error.response?.data?.message || "No se pudo registrar";
 				MySwal.fire("Error", mensaje, "error");
 			}
 		},
 	});
+
 	const onSubmit = (data) => {
 		createSedeMutation.mutate(data);
 	};
+
 	return (
 		<LayoutDashboard>
 			<div className="form-panel-container">
@@ -66,13 +70,14 @@ const RegistrarSede = () => {
 				>
 					Volver
 				</button>
-				<h2>Registrar Nueva Sede</h2>
+				<h2>Registrar Nueva Sede o Almacén</h2>
 				<form className="form-panel" onSubmit={handleSubmit(onSubmit)}>
 					<div className="form-group">
-						<label>Nombre de la Sede:</label>
+						<label>Nombre:</label>
 						<input
 							type="text"
 							{...register("nombreSede")}
+							placeholder="Ej. Sede Central"
 						/>
 						{errors.nombreSede && <span className="error-message">{errors.nombreSede.message}</span>}
 					</div>
@@ -82,6 +87,7 @@ const RegistrarSede = () => {
 						<input
 							type="text"
 							{...register("direccion")}
+							placeholder="Ej. Av. Principal 123"
 						/>
 						{errors.direccion && <span className="error-message">{errors.direccion.message}</span>}
 					</div>
@@ -91,12 +97,21 @@ const RegistrarSede = () => {
 						<input
 							type="text"
 							{...register("anexo")}
+							placeholder="Ej. 101"
 						/>
 						{errors.anexo && <span className="error-message">{errors.anexo.message}</span>}
 					</div>
+					<div className="form-group">
+						<label>Tipo:</label>
+						<select {...register("tipo")}>
+							<option value="Sede">Sede</option>
+							<option value="Almacén">Almacén</option>
+						</select>
+						{errors.tipo && <span className="error-message">{errors.tipo.message}</span>}
+					</div>
 
 					<button type="submit" className="form-panel-submit" disabled={createSedeMutation.isPending}>
-						{createSedeMutation.isPending ? "Registrando..." : "Registrar Sede"}
+						{createSedeMutation.isPending ? "Registrando..." : "Registrar"}
 					</button>
 				</form>
 			</div>

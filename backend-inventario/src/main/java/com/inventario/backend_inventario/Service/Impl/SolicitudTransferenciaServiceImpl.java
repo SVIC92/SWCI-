@@ -1,6 +1,7 @@
 package com.inventario.backend_inventario.Service.Impl;
 
 import com.inventario.backend_inventario.Dto.SolicitudRequestDto;
+import com.inventario.backend_inventario.Enum.EstadoSolicitud;
 import com.inventario.backend_inventario.Exception.ResourceConflictException;
 import com.inventario.backend_inventario.Model.*;
 import com.inventario.backend_inventario.Repository.*;
@@ -40,7 +41,7 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
         solicitud.setSedeDestino(destino);
         solicitud.setUsuarioSolicitante(solicitante);
         solicitud.setFechaSolicitud(LocalDateTime.now());
-        solicitud.setEstado(SolicitudTransferencia.EstadoSolicitud.PENDIENTE);
+        solicitud.setEstado(EstadoSolicitud.PENDIENTE);
 
         // 2. Configurar Detalles (Lista de Productos)
         List<DetalleSolicitud> detalles = new ArrayList<>();
@@ -64,7 +65,7 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
 
     @Override
     public List<SolicitudTransferencia> listarPendientes() {
-        return solicitudRepo.findByEstado(SolicitudTransferencia.EstadoSolicitud.PENDIENTE);
+        return solicitudRepo.findByEstado(EstadoSolicitud.PENDIENTE);
     }
 
     @Override
@@ -73,7 +74,7 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
         SolicitudTransferencia solicitud = solicitudRepo.findById(solicitudId)
             .orElseThrow(() -> new ResourceConflictException("Solicitud no encontrada"));
 
-        if (solicitud.getEstado() != SolicitudTransferencia.EstadoSolicitud.PENDIENTE) {
+        if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new ResourceConflictException("La solicitud ya fue procesada anteriormente");
         }
 
@@ -108,7 +109,7 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
         }
 
         // Actualizar estado final
-        solicitud.setEstado(SolicitudTransferencia.EstadoSolicitud.APROBADO);
+        solicitud.setEstado(EstadoSolicitud.APROBADO);
         solicitud.setFechaAprobacion(LocalDateTime.now());
         solicitudRepo.save(solicitud);
     }
@@ -118,12 +119,12 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
         SolicitudTransferencia solicitud = solicitudRepo.findById(solicitudId)
             .orElseThrow(() -> new ResourceConflictException("Solicitud no encontrada"));
 
-        if (solicitud.getEstado() != SolicitudTransferencia.EstadoSolicitud.PENDIENTE) {
+        if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new ResourceConflictException("La solicitud no está pendiente");
         }
 
         solicitud.setMotivoRechazo(motivo);
-        solicitud.setEstado(SolicitudTransferencia.EstadoSolicitud.RECHAZADO);
+        solicitud.setEstado(EstadoSolicitud.RECHAZADO);
         solicitud.setFechaAprobacion(LocalDateTime.now()); // Usamos este campo para saber cuándo se cerró
         solicitudRepo.save(solicitud);
     }
@@ -131,6 +132,6 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
     @Override
     public List<SolicitudTransferencia> listarHistorial() {
         // Asumiendo que agregaste este método en el Repository: findByEstadoNot(EstadoSolicitud.PENDIENTE)
-        return solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(SolicitudTransferencia.EstadoSolicitud.PENDIENTE);
+        return solicitudRepo.findByEstadoNotOrderByFechaSolicitudDesc(EstadoSolicitud.PENDIENTE);
     }
 }

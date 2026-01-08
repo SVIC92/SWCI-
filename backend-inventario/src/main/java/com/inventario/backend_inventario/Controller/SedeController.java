@@ -20,6 +20,11 @@ public class SedeController {
     public List<Sede> obtenerSedes() {
         return sedeService.obtenerTodasLasSedes();
     }
+    
+    @GetMapping("/almacenes")
+    public List<Sede> obtenerAlmacenes() {
+        return sedeService.obtenerTodosLosAlmacenes();
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Sede> obtenerSedePorId(@PathVariable Integer id) {

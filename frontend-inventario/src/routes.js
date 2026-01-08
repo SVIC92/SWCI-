@@ -17,6 +17,7 @@ import DashboardJefeInventario from "./components/Dashboards/Roles/dashboardJInv
 import DashboardOperadorRecepcion from "./components/Dashboards/Roles/dashboardORecepcion";
 import DashboardAuditor from "./components/Dashboards/Roles/dashboardAuditor";
 import DashboardOperadorTienda from "./components/Dashboards/Roles/dashboardOTienda";
+import DashboardJAlmacen from "./components/Dashboards/Roles/dashboardJAlmacen";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PerfilUsuario from "./pages/PerfilUsuario";
 import ListaUsuarios from "./pages/Mod. Usuario/ListaUsuarios";
@@ -59,11 +60,16 @@ import DashboardReportes from "./components/Dashboards/Modulos/dashboardReportes
 import Settings from "./pages/Mod. Configuracion/Settings";
 
 import ListaMovimientos from "./pages/Mod. Inventario/ListaMovimientos";
+import DashboardLogistica from "./components/Dashboards/Modulos/dashboardLogistica";
+import GestionHu from "./pages/Logistica/GestionHu";
+import ActualizarHu from "./pages/Logistica/ActualizarHu";
+import CrearHu from "./pages/Logistica/CrearHu";
 
 import ChatIA from "./pages/IA/ChatIA";
 // --- Roles ---
 const ROLES = {
   ADMIN: "Administrador",
+  JEFE_ALMACEN: "Jefe de Almacén",
   JEFE_INV: "Jefe de Inventario",
   OP_RECEPCION: "Operador de Recepción de Mercadería",
   AUDITOR: "Auditor de Inventarios",
@@ -73,6 +79,7 @@ const ROLES = {
 // Grupos de roles comunes
 const ALL_ROLES = [
   ROLES.ADMIN,
+  ROLES.JEFE_ALMACEN,
   ROLES.JEFE_INV,
   ROLES.OP_RECEPCION,
   ROLES.AUDITOR,
@@ -161,6 +168,12 @@ const RutasDashboard = [
     "/dashboard-operador-tienda",
     [ROLES.OP_TIENDA],
     DashboardOperadorTienda
+  ),
+  RutaProtegida(
+    "jalmacen",
+    "/dashboard-jefe-almacen",
+    [ROLES.JEFE_ALMACEN],
+    DashboardJAlmacen
   ),
 ];
 
@@ -358,6 +371,32 @@ const RutasInventario = [
     SolicitarTransferencia
   ),
 ];
+const RutasLogistica = [
+  RutaProtegida(
+    "dashboardLogistica",
+    "/dashboard-logistica",
+    ADMIN_JEFE,
+    DashboardLogistica
+  ),
+  RutaProtegida(
+    "gestionHu",
+    "/hu/gestion",
+    ADMIN_JEFE,
+    GestionHu
+  ),
+  RutaProtegida(
+    "actualizarHu",
+    "/hu/gestion/actualizar/:id",
+    ADMIN_JEFE,
+    ActualizarHu
+  ),
+  RutaProtegida(
+    "crearHu",
+    "/hu/gestion/crear",
+    ADMIN_JEFE,
+    CrearHu
+  ),
+];
 const RutasIA = [
   RutaProtegida(
     "chatIA",
@@ -378,6 +417,7 @@ const AppRoutes = [
   ...RutasInventario,
   ...RutasConteoInventario,
   ...RutasReportes,
+  ...RutasLogistica,
   ...RutasIA,
 ];
 
