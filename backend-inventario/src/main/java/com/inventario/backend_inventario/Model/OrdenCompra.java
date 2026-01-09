@@ -1,9 +1,12 @@
 package com.inventario.backend_inventario.Model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.inventario.backend_inventario.Enum.EstadoOC;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +44,8 @@ public class OrdenCompra {
     private Double totalEstimado;
 
     @OneToMany(mappedBy = "ordenCompra", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference 
+    @ToString.Exclude     
     private List<DetalleOrdenCompra> detalles = new ArrayList<>();
 
     @PrePersist

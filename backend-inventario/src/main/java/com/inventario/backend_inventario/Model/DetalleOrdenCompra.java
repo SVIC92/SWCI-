@@ -1,8 +1,11 @@
 package com.inventario.backend_inventario.Model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "DETALLE_ORDEN_COMPRA")
@@ -15,6 +18,8 @@ public class DetalleOrdenCompra {
 
     @ManyToOne
     @JoinColumn(name = "id_orden", nullable = false)
+    @JsonBackReference 
+    @ToString.Exclude
     private OrdenCompra ordenCompra;
 
     @ManyToOne
@@ -23,8 +28,8 @@ public class DetalleOrdenCompra {
 
     private Integer cantidadSolicitada;
     private Integer cantidadRecibida = 0;
-    private Double costoUnitarioPactado; 
-    
+    private Double costoUnitarioPactado;
+
     public Double getSubtotal() {
         return cantidadSolicitada * costoUnitarioPactado;
     }
