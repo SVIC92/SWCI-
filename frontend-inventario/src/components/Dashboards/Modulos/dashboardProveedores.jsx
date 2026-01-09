@@ -20,12 +20,6 @@ const DashboardProveedores = () => {
       descripcion: "Realiza un pedido de mercadería HU al almacen de su elección.",
       ruta: "/proveedores/pedido-mercaderia",
     },
-    {
-      id: "Generacion-OC",
-      titulo: "Generación de Orden de Compra",
-      descripcion: "Genera órdenes de compra para los pedidos realizados a los proveedores.",
-      ruta: "/proveedores/orden-compra",
-    },
   ];
   const OpcionesSoporte = [
     {

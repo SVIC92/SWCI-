@@ -26,7 +26,7 @@ import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
 import { getSedes } from "../../api/sedeApi";
-import { generarOrdenes } from "../../api/comprasApi";
+import { generarOrdenesMasivas } from "../../api/comprasApi";
 import { getSugerenciasReabastecimiento } from "../../api/productoApi";
 
 const MySwal = withReactContent(Swal);
@@ -102,8 +102,16 @@ const GenerarOrdenCompra = () => {
         }
     };
 
-    const generarOrdenesMutation = useMutation({
-        mutationFn: (items) => generarOrdenes(sedeSeleccionada, items),
+    const generarOrdenesMasivasMutation = useMutation({
+        mutationFn: (items) => {
+            // Validación de seguridad para evitar error [object Object]
+            if (typeof sedeSeleccionada === 'object') {
+                console.error("Error: sedeSeleccionada es un objeto", sedeSeleccionada);
+                throw new Error("Error interno: ID de sede inválido.");
+            }
+            // CORRECCIÓN 1: Usar la función importada correctamente
+            return generarOrdenesMasivas(sedeSeleccionada, items);
+        },
         onSuccess: (response) => {
             MySwal.fire({
                 title: "¡Órdenes Generadas!",
@@ -135,7 +143,7 @@ const GenerarOrdenCompra = () => {
             cancelButtonText: "Cancelar"
         }).then((result) => {
             if (result.isConfirmed) {
-                generarOrdenesMutation.mutate(itemsArray);
+                generarOrdenesMasivasMutation.mutate(itemsArray);
             }
         });
     };
@@ -193,16 +201,14 @@ const GenerarOrdenCompra = () => {
                                 color="primary"
                                 fullWidth
                                 startIcon={<ShoppingCartCheckoutIcon />}
-                                disabled={Object.keys(seleccionados).length === 0 || generarOrdenesMutation.isPending}
+                                disabled={Object.keys(seleccionados).length === 0 || generarOrdenesMasivasMutation.isPending}
                                 onClick={handleGenerar}
                             >
-                                {generarOrdenesMutation.isPending ? "Procesando..." : "Generar Órdenes de Compra"}
+                                {generarOrdenesMasivasMutation.isPending ? "Procesando..." : "Generar Órdenes de Compra"}
                             </Button>
                         </Grid>
                     </Grid>
                 </Paper>
-
-                {/* Área de Contenido */}
                 {!sedeSeleccionada ? (
                     <Alert severity="info">Por favor, seleccione una sede para ver las sugerencias de compra.</Alert>
                 ) : loadingSugerencias ? (

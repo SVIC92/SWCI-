@@ -17,7 +17,7 @@ const dashboardLogistica = () => {
             id: "Generacion-OC",
             titulo: "Generación de Orden de Compra",
             descripcion: "Genera órdenes de compra para los pedidos realizados a los proveedores.",
-            ruta: "/proveedores/orden-compra",
+            ruta: "/logistica/oc/lista",
         },
         {
             id: "-----",

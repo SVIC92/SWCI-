@@ -65,6 +65,8 @@ import DashboardLogistica from "./components/Dashboards/Modulos/dashboardLogisti
 import GestionHu from "./pages/Logistica/GestionHu";
 import ActualizarHu from "./pages/Logistica/ActualizarHu";
 import CrearHu from "./pages/Logistica/CrearHu";
+import GenerarOrdenCompra from "./pages/Logistica/GenerarOrdenCompra";
+import ListaOC from "./pages/Logistica/ListaOC";
 
 import ChatIA from "./pages/IA/ChatIA";
 // --- Roles ---
@@ -402,6 +404,18 @@ const RutasLogistica = [
     "/hu/gestion/crear",
     ADMIN_JEFE,
     CrearHu
+  ),
+  RutaProtegida(
+    "generarOrdenCompra",
+    "/logistica/oc/generar",
+    ADMIN_JEFE,
+    GenerarOrdenCompra
+  ),
+  RutaProtegida(
+    "listaOrdenesCompra",
+    "/logistica/oc/lista",
+    ADMIN_JEFE,
+    ListaOC
   ),
 ];
 const RutasIA = [

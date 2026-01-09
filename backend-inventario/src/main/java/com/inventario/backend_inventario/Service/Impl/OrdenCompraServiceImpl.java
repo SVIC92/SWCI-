@@ -40,7 +40,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         Map<Integer, List<Map<String, Object>>> itemsPorProveedor = new HashMap<>();
 
         for (Map<String, Object> item : itemsSolicitados) {
-            Long idProducto = Long.valueOf(item.get("id_producto").toString());
+            Long idProducto = Long.valueOf(item.get("idProducto").toString());
             Producto prod = productoRepository.findById(idProducto)
                     .orElseThrow(() -> new EntityNotFoundException("Producto ID " + idProducto + " no existe"));
             
@@ -66,7 +66,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
             double total = 0.0;
 
             for (Map<String, Object> item : entry.getValue()) {
-                Producto prod = productoRepository.findById(Long.valueOf(item.get("id_producto").toString())).get();
+                Producto prod = productoRepository.findById(Long.valueOf(item.get("idProducto").toString())).get();
                 Integer cantidad = Integer.valueOf(item.get("cantidad").toString());
 
                 DetalleOrdenCompra det = new DetalleOrdenCompra();

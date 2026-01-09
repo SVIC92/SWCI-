@@ -1,5 +1,5 @@
 import axiosInstance from "./axiosConfig";
-export const generarOrdenesMasivas = async (items, idSede) => {
+export const generarOrdenesMasivas = async (idSede, items) => {
   const response = await axiosInstance.post(
     `/compras/generar?idSede=${idSede}`,
     items
