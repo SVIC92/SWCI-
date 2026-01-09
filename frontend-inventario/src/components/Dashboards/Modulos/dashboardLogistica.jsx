@@ -14,10 +14,10 @@ const dashboardLogistica = () => {
     ];
     const OpcionOperacion = [
         {
-            id: "-----",
-            titulo: "----",
-            descripcion: "----",
-            ruta: "-----",
+            id: "Generacion-OC",
+            titulo: "Generación de Orden de Compra",
+            descripcion: "Genera órdenes de compra para los pedidos realizados a los proveedores.",
+            ruta: "/proveedores/orden-compra",
         },
         {
             id: "-----",

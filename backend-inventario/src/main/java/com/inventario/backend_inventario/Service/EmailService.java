@@ -52,4 +52,20 @@ public class EmailService {
             System.err.println("Error enviando correo HTML: " + e.getMessage());
         }
     }
+    public void sendEmail(String to, String subject, String body) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
+
+            helper.setFrom(senderEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, false);
+
+            mailSender.send(mimeMessage);
+
+        } catch (MessagingException e) {
+            System.err.println("Error enviando correo simple: " + e.getMessage());
+        }
+    }
 }
