@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -47,6 +48,7 @@ import TablaLista from "../../components/TablaLista";
 const MySwal = withReactContent(Swal);
 
 const PedidoMercaderia = () => {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
 
     // --- Estados para Solicitud (Drawer) ---
@@ -218,6 +220,7 @@ const PedidoMercaderia = () => {
                 isLoading={loadingHus}
                 onRefresh={refetch}
                 getRowId={(row) => row.id}
+                onBack={() => navigate("/dashboard-proveedores")}
             />
 
             {/* --- MODAL DE DETALLE (Información) --- */}

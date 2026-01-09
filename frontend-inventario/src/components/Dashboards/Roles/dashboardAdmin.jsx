@@ -1,6 +1,7 @@
 import React from "react";
 import LayoutDashboard from "../../Layouts/LayoutDashboard";
 import GraficoUsuariosPorRol from "../../Graficos/GraficoUsuariosPorRol"
+import ChartExportContainer from "../../Graficos/ChartExportContainer";
 import FeedActividad from "../../Graficos/FeedActividad";
 import CampaniaWidget from "../../Graficos/CampaniaWidget";
 import "../../styles/dashboardAdmin.css";
@@ -32,7 +33,9 @@ export default function DashboardAdmin() {
                     <div className="grid-item-large">
                         <div className="card-widget">
                             <h3>Usuarios por Rol</h3>
-                            <GraficoUsuariosPorRol />
+                            <ChartExportContainer title="Usuarios por Rol">
+                                <GraficoUsuariosPorRol />
+                            </ChartExportContainer>
                         </div>
                     </div>
                     <div className="grid-item-large">

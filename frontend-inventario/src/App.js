@@ -1,6 +1,6 @@
 import "./App.css";
 import "./components/styles/SweetAlert.css";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useGlobalStore } from "./store/useGlobalStore";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -23,7 +23,8 @@ function App() {
     let stompClient = null;
 
     if (token) {
-      const backendUrl = "https://swci-backend.onrender.com" || "http://localhost:8080";
+      const backendUrl =
+        "https://swci-backend.onrender.com" || "http://localhost:8080";
       const socket = new SockJS(`${backendUrl}/ws`);
       stompClient = Stomp.over(socket);
       stompClient.debug = null;
@@ -71,14 +72,37 @@ function App() {
     body.classList.add(`density-${density}`);
   }, [theme, fontSize, density]);
 
-  const muiTheme = React.useMemo(
+  const getFontSizeValue = (size) => {
+    switch (size) {
+      case "small":
+        return 12;
+      case "large":
+        return 16;
+      default:
+        return 14;
+    }
+  };
+
+  const muiTheme = useMemo(
     () =>
       createTheme({
         palette: {
           mode: theme,
         },
+        typography: {
+          fontSize: getFontSizeValue(fontSize),
+        },
+        components: {
+          MuiButton: {
+            styleOverrides: {
+              root: {
+                fontSize: fontSize === "large" ? "1rem" : undefined,
+              },
+            },
+          },
+        },
       }),
-    [theme]
+    [theme, fontSize]
   );
 
   return (

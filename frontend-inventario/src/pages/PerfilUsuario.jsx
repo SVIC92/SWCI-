@@ -12,10 +12,15 @@ import {
   Divider,
   Chip,
 } from "@mui/material";
+import { subirFotoPerfil } from "../api/usuarioApi";
 
 function PerfilUsuario() {
   const usuario = useGlobalStore((state) => state.user) || {};
   const setUser = useGlobalStore((state) => state.setUser);
+  const fileInputRef = useRef(null);
+  const [fotoActual, setFotoActual] = useState(
+    usuario.fotoUrl || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+  );
   const apellidos = [usuario.apellido_pat, usuario.apellido_mat]
     .filter(Boolean)
     .join(" ");
@@ -38,6 +43,34 @@ function PerfilUsuario() {
     { label: "Estado", valor: estadoTexto },
     { label: "Rol", valor: rolTexto },
   ];
+  useEffect(() => {
+    if (usuario.fotoUrl) {
+      setFotoActual(usuario.fotoUrl);
+    }
+  }, [usuario.fotoUrl]);
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      Swal.fire("Error", "El archivo debe ser una imagen", "error");
+      return;
+    }
+
+    try {
+      Swal.fire({ title: "Subiendo foto...", didOpen: () => Swal.showLoading() });
+      const respuesta = await subirFotoPerfil(usuario.id_u, file);
+      setFotoActual(respuesta.fotoUrl);
+      setUser((prevUser) => ({
+        ...prevUser,
+        fotoUrl: respuesta.fotoUrl
+      }));
+      Swal.fire("Éxito", "Tu foto de perfil ha sido actualizada", "success");
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo subir la imagen", "error");
+    }
+  };
   return (
     <LayoutDashboard>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -46,11 +79,37 @@ function PerfilUsuario() {
         </Typography>
         <Paper sx={{ p: { xs: 2, md: 3 } }}>
           <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-            <Avatar
-              src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-              alt="Avatar de Perfil"
-              sx={{ width: 80, height: 80, mr: 2 }}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+              accept="image/*"
             />
+            <Badge
+              overlap="circular"
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              badgeContent={
+                <IconButton
+                  onClick={() => fileInputRef.current.click()}
+                  sx={{
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    width: 32,
+                    height: 32,
+                    '&:hover': { bgcolor: 'primary.dark' }
+                  }}
+                >
+                  <PhotoCameraIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              }
+            >
+              <Avatar
+                src={fotoActual}
+                alt="Foto de Perfil"
+                sx={{ width: 100, height: 100, mr: 2, border: '2px solid #e0e0e0' }}
+              />
+            </Badge>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: "bold" }}>
                 {[nombreMostrar, apellidos].filter(Boolean).join(" ") ||

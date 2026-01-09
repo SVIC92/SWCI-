@@ -2,8 +2,12 @@ package com.inventario.backend_inventario.Service;
 
 import com.inventario.backend_inventario.Dto.UsuarioUpdateDto;
 import com.inventario.backend_inventario.Model.Usuario;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UsuarioService {
     List<Usuario> listarUsuarios();
@@ -16,4 +20,5 @@ public interface UsuarioService {
     boolean existeEmail(String email);
     boolean existeEmailEnOtroUsuario(String email, Integer id);
     boolean existeDni(String dni);
+    Usuario actualizarFoto(Integer id, MultipartFile archivo) throws IOException;
 }

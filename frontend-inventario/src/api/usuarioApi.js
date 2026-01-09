@@ -20,3 +20,14 @@ export const desactivarUsuarioApi = (id) =>
   axiosInstance.patch(`/usuarios/${id}/desactivar`);
 export const activarUsuarioApi = (id) =>
   axiosInstance.patch(`/usuarios/${id}/activar`);
+
+export const subirFotoPerfil = async (id, archivo) => {
+  const formData = new FormData();
+  formData.append("file", archivo);
+  const response = await axiosInstance.post(`/usuarios/${id}/foto`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};

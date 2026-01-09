@@ -8,10 +8,13 @@ import {
 	Stack,
 	Tooltip,
 	IconButton,
-	Switch,           // --- NUEVO
-	FormControlLabel, // --- NUEVO
-	Box               // --- NUEVO
+	Box,
+	ToggleButton, 
+	ToggleButtonGroup, 
+	Paper    
 } from "@mui/material";
+import BusinessIcon from '@mui/icons-material/Business';
+import WarehouseIcon from '@mui/icons-material/Warehouse';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TablaLista from "../../components/TablaLista";
@@ -175,17 +178,28 @@ const ListaSedes = () => {
 
 	return (
 		<>
-			<Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1, px: 2 }}>
-				<FormControlLabel
-					control={
-						<Switch
-							checked={mostrarAlmacenes}
-							onChange={(e) => setMostrarAlmacenes(e.target.checked)}
-							color="primary"
-						/>
-					}
-					label={mostrarAlmacenes ? "Viendo: Almacenes" : "Viendo: Sedes"}
-				/>
+			<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 4, pr: 3 }}>
+				<Paper elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
+					<ToggleButtonGroup
+						color="primary"
+						value={mostrarAlmacenes ? "almacen" : "sede"}
+						exclusive
+						onChange={(e, nuevoValor) => {
+							if (nuevoValor !== null) {
+								setMostrarAlmacenes(nuevoValor === "almacen");
+							}
+						}}
+						aria-label="Tipo de vista"
+						size="small"
+					>
+						<ToggleButton value="sede" sx={{ px: 3, textTransform: 'none', fontWeight: 600 }}>
+							<BusinessIcon sx={{ mr: 1 }} /> Sedes
+						</ToggleButton>
+						<ToggleButton value="almacen" sx={{ px: 3, textTransform: 'none', fontWeight: 600 }}>
+							<WarehouseIcon sx={{ mr: 1 }} /> Almacenes
+						</ToggleButton>
+					</ToggleButtonGroup>
+				</Paper>
 			</Box>
 
 			<TablaLista

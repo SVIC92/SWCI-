@@ -61,6 +61,9 @@ public class Usuario implements UserDetails {
 
     @Column(name = "mfa_secret")
     private String mfaSecret;
+    
+    @Column(name = "foto_url")
+    private String fotoUrl;
 
     @ManyToOne
     @JoinColumn(name = "id_rol")

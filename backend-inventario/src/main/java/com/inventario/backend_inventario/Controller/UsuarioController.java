@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -90,5 +92,20 @@ public class UsuarioController {
         return usuarioService.activarUsuario(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/foto")
+    public ResponseEntity<?> subirFoto(@PathVariable Integer id, @RequestParam("file") MultipartFile file) {
+        try {
+            Usuario usuarioActualizado = usuarioService.actualizarFoto(id, file);
+            return ResponseEntity.ok(Map.of(
+                "message", "Foto actualizada con éxito",
+                "fotoUrl", usuarioActualizado.getFotoUrl()
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "Error al subir la imagen: " + e.getMessage()));
+        }
     }
 }

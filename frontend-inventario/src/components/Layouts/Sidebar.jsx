@@ -115,8 +115,17 @@ export default function Sidebar({ collapsed, onCollapsedChange }) {
     <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden', }}>
       <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Avatar
-          src="/logo.png"
-          sx={{ width: isOpen ? 80 : 40, height: isOpen ? 80 : 40, mb: 1, cursor: 'pointer', transition: 'width 0.2s, height 0.2s' }}
+          src={user?.fotoUrl || "/logo.png"}
+          alt="Foto de perfil"
+          sx={{
+            width: isOpen ? 80 : 40,
+            height: isOpen ? 80 : 40,
+            mb: 1,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            border: '2px solid',
+            borderColor: 'divider',
+          }}
           onClick={() => handleMenuNavigation("/perfil")}
         />
         <Typography variant="subtitle1" noWrap sx={{ display: isOpen ? 'block' : 'none' }}>

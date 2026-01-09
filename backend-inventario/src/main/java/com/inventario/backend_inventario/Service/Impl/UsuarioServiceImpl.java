@@ -1,6 +1,8 @@
 package com.inventario.backend_inventario.Service.Impl;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +10,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.inventario.backend_inventario.Dto.UsuarioUpdateDto;
 import com.inventario.backend_inventario.Exception.ResourceConflictException;
 import com.inventario.backend_inventario.Model.Rol;
@@ -26,6 +31,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository userRepo;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Cloudinary cloudinary;
     @Autowired
     private HistorialActividadService historialActividadService;
 
@@ -35,6 +41,23 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public Optional<Usuario> obtenerUsuarioPorId(Integer id) { return userRepo.findById(id); }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public Usuario actualizarFoto(Integer id, MultipartFile archivo) throws IOException {
+        Usuario usuario = userRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (archivo.isEmpty()) {
+            throw new RuntimeException("El archivo está vacío");
+        }
+        Map<String, Object> uploadResult = (Map<String, Object>) cloudinary.uploader().upload(archivo.getBytes(),
+                ObjectUtils.asMap("folder", "usuarios_perfil"));
+        String urlImagen = (String) uploadResult.get("secure_url");
+        usuario.setFotoUrl(urlImagen);
+        Usuario usuarioGuardado = userRepo.save(usuario);
+        return usuarioGuardado;
+    }
+    
     @Override
     public Usuario crearUsuario(Usuario usuario) {
         if (existeEmail(usuario.getEmail())) {

@@ -45,12 +45,11 @@ const ActualizarHu = () => {
     const [cantidad, setCantidad] = useState("");
     const [nuevosDetalles, setNuevosDetalles] = useState([]);
     const [nuevoEstado, setNuevoEstado] = useState("");
-    const [nuevoTipo, setNuevoTipo] = useState(""); // Estado para tipo de carga
-    const [nuevaFechaVencimiento, setNuevaFechaVencimiento] = useState(""); // Estado para fecha de vencimiento
+    const [nuevoTipo, setNuevoTipo] = useState("");
+    const [nuevaFechaVencimiento, setNuevaFechaVencimiento] = useState("");
 
     const [datosCargados, setDatosCargados] = useState(false);
 
-    // --- 1. CARGA DE DATOS ---
     const { data: huData, isLoading: isLoadingHu } = useQuery({
         queryKey: ["hu", id],
         queryFn: () => getHuById(id),
@@ -65,8 +64,8 @@ const ActualizarHu = () => {
     useEffect(() => {
         if (huData && !datosCargados) {
             if (huData.estado) setNuevoEstado(huData.estado);
-            if (huData.tipoIndicador) setNuevoTipo(huData.tipoIndicador); // Cargar tipo
-            if (huData.fechaVencimiento) setNuevaFechaVencimiento(huData.fechaVencimiento); // Cargar fecha
+            if (huData.tipoIndicador) setNuevoTipo(huData.tipoIndicador);
+            if (huData.fechaVencimiento) setNuevaFechaVencimiento(huData.fechaVencimiento);
             const listaBackend = huData.detalle || [];
 
             if (listaBackend.length > 0) {
@@ -79,7 +78,6 @@ const ActualizarHu = () => {
                 setNuevosDetalles(detallesFormateados);
             }
 
-            // Marcamos como cargado para que no se sobrescriban cambios futuros
             setDatosCargados(true);
         }
     }, [huData, datosCargados]);
@@ -115,11 +113,9 @@ const ActualizarHu = () => {
 
         const cantAAgregar = parseInt(cantidad, 10);
 
-        // Buscar si ya existe en la lista local
         const indexExistente = nuevosDetalles.findIndex(d => d.idProducto === productoSeleccionado.id_producto);
 
         if (indexExistente >= 0) {
-            // SUMAR
             const listaActualizada = [...nuevosDetalles];
             listaActualizada[indexExistente].cantidad += cantAAgregar;
             setNuevosDetalles(listaActualizada);
@@ -135,7 +131,6 @@ const ActualizarHu = () => {
                 color: isDark ? '#fff' : '#545454'
             });
         } else {
-            // AGREGAR
             const nuevoDetalle = {
                 idProducto: productoSeleccionado.id_producto,
                 nombreProducto: productoSeleccionado.nombre,
@@ -179,10 +174,8 @@ const ActualizarHu = () => {
 
     return (
         <LayoutDashboard>
-            {/* CAMBIO 1: width 100% para llenar la pantalla */}
             <Box sx={{ p: 3, width: "100%", boxSizing: "border-box" }}>
 
-                {/* Encabezado */}
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
                     <Button
                         startIcon={<ArrowBackIcon />}
@@ -197,7 +190,6 @@ const ActualizarHu = () => {
                 </Box>
 
                 <Grid container spacing={3}>
-                    {/* CAMBIO 2: Reducimos el panel izquierdo a md={3} */}
                     <Grid item xs={12} md={6}>
                         <Card elevation={3} sx={{ height: "100%" }}>
                             <CardContent>
@@ -209,7 +201,6 @@ const ActualizarHu = () => {
                                     <Typography variant="body1">{huData?.almacen?.nombreSede || "N/A"}</Typography>
                                 </Box>
 
-                                {/* Campo Editable: Tipo Indicador */}
                                 <Box sx={{ mb: 2 }}>
                                     <TextField
                                         select
@@ -229,7 +220,6 @@ const ActualizarHu = () => {
                                     </TextField>
                                 </Box>
 
-                                {/* Campo Editable: Fecha Vencimiento */}
                                 <Box sx={{ mb: 2 }}>
                                     <TextField
                                         label="Fecha Vencimiento"
@@ -265,7 +255,6 @@ const ActualizarHu = () => {
                         </Card>
                     </Grid>
 
-                    {/* CAMBIO 3: Aumentamos el panel derecho a md={9} para que use el espacio sobrante */}
                     <Grid item xs={12} md={24}>
                         <Card elevation={3} sx={{ height: "100%" , width: "190%"}}>
                             <CardContent>
@@ -275,7 +264,6 @@ const ActualizarHu = () => {
                                 </Typography>
                                 <Divider sx={{ mb: 3 }} />
 
-                                {/* Formulario de Adición */}
                                 <Grid container spacing={2} alignItems="center">
                                     <Grid item xs={12} md={6} sx={{ width: "50%" }}>
                                         <Autocomplete
@@ -314,7 +302,6 @@ const ActualizarHu = () => {
                                     </Grid>
                                 </Grid>
 
-                                {/* Tabla de Productos */}
                                 <TableContainer component={Paper} variant="outlined" sx={{ mt: 3, maxHeight: 300 }}>
                                     <Table size="small">
                                         <TableHead sx={(theme) => ({
@@ -341,11 +328,10 @@ const ActualizarHu = () => {
                                                         <TableCell>{detalle.nombreProducto || "---"}</TableCell>
                                                         <TableCell align="center">
                                                             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
-                                                                {/* Botón Restar */}
                                                                 <IconButton
                                                                     size="small"
                                                                     onClick={() => handleUpdateCantidadFila(detalle.idProducto, -1)}
-                                                                    disabled={detalle.cantidad <= 1} // Opcional: deshabilita si es 1
+                                                                    disabled={detalle.cantidad <= 1}
                                                                     sx={{ border: '1px solid', borderColor: 'divider' }}
                                                                 >
                                                                     <RemoveIcon fontSize="small" />
@@ -355,7 +341,6 @@ const ActualizarHu = () => {
                                                                     {detalle.cantidad}
                                                                 </Typography>
 
-                                                                {/* Botón Sumar */}
                                                                 <IconButton
                                                                     size="small"
                                                                     onClick={() => handleUpdateCantidadFila(detalle.idProducto, 1)}
@@ -384,7 +369,6 @@ const ActualizarHu = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Botón de Guardar General */}
                         <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", width: "190%" }}>
                             <Button
                                 variant="contained"
