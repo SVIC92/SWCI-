@@ -11,4 +11,5 @@ import com.inventario.backend_inventario.Model.Sede;
 public interface SedeRepository extends JpaRepository<Sede, Integer> {
     Sede findByNombreSede(String nombreSede);
     List<Sede> findByTipo(String tipo);
+    List<Sede> findByNombreSedeContainingIgnoreCase(String nombreSede);
 }

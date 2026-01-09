@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -24,6 +25,7 @@ import {
 } from "@mui/material";
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
 import { getSedes } from "../../api/sedeApi";
 import { generarOrdenesMasivas } from "../../api/comprasApi";
@@ -32,6 +34,7 @@ import { getSugerenciasReabastecimiento } from "../../api/productoApi";
 const MySwal = withReactContent(Swal);
 
 const GenerarOrdenCompra = () => {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [sedeSeleccionada, setSedeSeleccionada] = useState("");
     const [seleccionados, setSeleccionados] = useState({});
@@ -104,12 +107,10 @@ const GenerarOrdenCompra = () => {
 
     const generarOrdenesMasivasMutation = useMutation({
         mutationFn: (items) => {
-            // Validación de seguridad para evitar error [object Object]
             if (typeof sedeSeleccionada === 'object') {
                 console.error("Error: sedeSeleccionada es un objeto", sedeSeleccionada);
                 throw new Error("Error interno: ID de sede inválido.");
             }
-            // CORRECCIÓN 1: Usar la función importada correctamente
             return generarOrdenesMasivas(sedeSeleccionada, items);
         },
         onSuccess: (response) => {
@@ -152,7 +153,16 @@ const GenerarOrdenCompra = () => {
         <LayoutDashboard>
             <Box sx={{ p: 3 }}>
                 {/* Cabecera */}
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                    <Button
+                        startIcon={<ArrowBackIcon />}
+                        onClick={() => navigate(-1)}
+                        sx={{ mr: 2 }}
+                        variant="outlined"
+                        size="small"
+                    >
+                        Volver
+                    </Button>
                     <div>
                         <Typography variant="h4" fontWeight="bold">Planificador de Compras</Typography>
                         <Typography variant="body1" color="text.secondary">
@@ -193,6 +203,7 @@ const GenerarOrdenCompra = () => {
                                 startIcon={<RefreshIcon />}
                                 onClick={() => refetchSugerencias()}
                                 disabled={!sedeSeleccionada || loadingSugerencias}
+                                sx={{width:"100%"}}
                             >
                                 Recalcular IA
                             </Button>

@@ -105,9 +105,9 @@ const ListaOC = () => {
     };
 
     const columns = [
-        { field: "codigoOrden", headerName: "Código", width: 140, renderCell: (p) => <b>{p.value}</b> },
+        { field: "codigoOrden", headerName: "Código", width: 180, renderCell: (p) => <b>{p.value}</b> },
         { field: "proveedor", headerName: "Proveedor", width: 200, valueGetter: (v) => v?.nombre_proveedor || "---" },
-        { field: "sedeDestino", headerName: "Sede Destino", width: 150, valueGetter: (v) => v?.nombreSede || "---" },
+        { field: "sedeDestino", headerName: "Sede Destino", width: 200, valueGetter: (v) => v?.nombreSede || "---" },
         {
             field: "fechaEmision", headerName: "Fecha Emisión", width: 150,
             valueFormatter: (v) => v ? format(new Date(v), "dd/MM/yyyy", { locale: es }) : ""
@@ -165,6 +165,7 @@ const ListaOC = () => {
                 onRefresh={() => queryClient.invalidateQueries(["ordenesCompra"])}
                 getRowId={(row) => row.id}
                 onAdd={() => navigate("/logistica/oc/generar")}
+                onBack={() => navigate("/dashboard-logistica")}
             />
 
             {/* --- MODAL DE DETALLE --- */}

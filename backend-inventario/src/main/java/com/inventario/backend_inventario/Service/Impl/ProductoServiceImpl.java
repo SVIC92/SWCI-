@@ -175,7 +175,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    public List<SugerenciaCompraDto> obtenerSugerenciasReabastecimiento(Long idSede) {
+    public List<SugerenciaCompraDto> obtenerSugerenciasReabastecimiento(Integer idSede) {
         if (idSede == null) {
             throw new IllegalArgumentException("El ID de la sede es obligatorio para calcular el reabastecimiento.");
         }

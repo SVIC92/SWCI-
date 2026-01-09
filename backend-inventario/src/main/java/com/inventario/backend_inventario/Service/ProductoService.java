@@ -15,5 +15,5 @@ public interface ProductoService {
     Producto activarProducto(Long id);
     Producto desactivarProducto(Long id);
     List<Producto> buscarSugerencias(String termino);
-    List<SugerenciaCompraDto> obtenerSugerenciasReabastecimiento(Long idSede);
+    List<SugerenciaCompraDto> obtenerSugerenciasReabastecimiento(Integer idSede);
 }

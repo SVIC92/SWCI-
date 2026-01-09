@@ -33,5 +33,5 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             "WHERE i.stock_actual <= p.stock_minimo " +
             "AND i.id_sede = :idSede",
             nativeQuery = true)
-    List<SugerenciaCompraDto> obtenerSugerenciasPorSede(@Param("idSede") Long idSede);
+    List<SugerenciaCompraDto> obtenerSugerenciasPorSede(@Param("idSede") Integer idSede);
 }

@@ -70,7 +70,7 @@ public class ProductoController {
     }
 
     @GetMapping("/sugerencias/reabastecer")
-    public ResponseEntity<List<SugerenciaCompraDto>> sugerirCompra(@RequestParam Long idSede) {
+    public ResponseEntity<List<SugerenciaCompraDto>> sugerirCompra(@RequestParam Integer idSede) {
         return ResponseEntity.ok(productoService.obtenerSugerenciasReabastecimiento(idSede));
     }
 }
