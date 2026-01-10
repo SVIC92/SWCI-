@@ -107,6 +107,7 @@ public class AuthController {
                     usuario.getTelefono(),
                     usuario.getEmail(),
                     usuario.getEstado_u(),
+                    usuario.getFotoUrl(),
                     usuario.getRol().getNombreRol(),
                     usuario.isMfaEnabled()));
             return ResponseEntity.ok(resp);
@@ -144,6 +145,7 @@ public class AuthController {
                 usuario.getTelefono(),
                 usuario.getEmail(),
                 usuario.getEstado_u(),
+                usuario.getFotoUrl(),
                 usuario.getRol().getNombreRol(),
                 usuario.isMfaEnabled()));
         return ResponseEntity.ok(resp);
@@ -255,6 +257,7 @@ public class AuthController {
             String telefono,
             String email,
             boolean estado_u,
+            String fotoUrl,
             String rol,
             boolean mfaEnabled) {
     }
