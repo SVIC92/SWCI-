@@ -53,6 +53,7 @@ import ListaSedes from "./pages/Mod. Sedes/ListaSedes";
 import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
 import GestionTransferencias from "./pages/Mod. Inventario/GestionTransferencias";
 import SolicitarTransferencia from "./pages/Mod. Inventario/SolicitarTransferencia";
+import RegistrarMerma from "./pages/Mod. Inventario/RegistrarMerma";
 import DashboardInventario from "./components/Dashboards/Modulos/dashboardInventario";
 
 
@@ -385,7 +386,7 @@ const RutasInventario = [
 
 
   ),
-  
+
 
   RutaProtegida(
     "Busqueda-Personalizada-Stock",
@@ -395,9 +396,9 @@ const RutasInventario = [
 
 
   )
-  
-  
-  
+
+
+
   ,
   RutaProtegida(
     "gestion-transferencias",
@@ -411,6 +412,14 @@ const RutasInventario = [
     ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
     SolicitarTransferencia
   ),
+
+  RutaProtegida(
+    "registrar-merma",
+    "/inventario/merma/registrar",
+    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA, // Los roles que desees que tengan acceso
+    RegistrarMerma
+  ),
+
 ];
 const RutasLogistica = [
   RutaProtegida(

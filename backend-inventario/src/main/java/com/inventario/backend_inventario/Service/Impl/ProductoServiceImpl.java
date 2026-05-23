@@ -90,7 +90,7 @@ public class ProductoServiceImpl implements ProductoService {
             throw new IllegalArgumentException("El código EAN ya está registrado");
         }
         subcategoriaRepository.findById(producto.getSubcategoria().getId())
-            .orElseThrow(() -> new EntityNotFoundException("Subcategoría no encontrada"));
+                .orElseThrow(() -> new EntityNotFoundException("Subcategoría no encontrada"));
         proveedorRepository.findById(producto.getProveedor().getId_proveedor())
                 .orElseThrow(() -> new EntityNotFoundException("Proveedor no encontrado"));
 

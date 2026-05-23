@@ -36,7 +36,7 @@ const DashboardInventario = () => {
             id: "merma",
             titulo: "Merma de Productos",
             descripcion: "Registra la merma de productos en el inventario",
-            ruta: "/merma",
+            ruta: "/inventario/merma/registrar",
         },
         {
             id: "importar-ventas",
