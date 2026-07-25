@@ -2,21 +2,24 @@
     background: var(--surface-color);
     border: 1px solid var(--surface-border);
     border-radius: var(--panel-radius);
-    padding: clamp(18px, 2.2vw, 28px);
+    padding: clamp(14px, 1.6vw, 20px);
     box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 10px;
     height: 100%;
-    min-height: 380px;
+    min-height: 240px;
+    max-height: 320px;
+    overflow: hidden;
     transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .feed-container h3 {
     margin: 0;
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     color: var(--card-text-strong);
     letter-spacing: 0.01em;
+    flex-shrink: 0;
 }
 
 .feed-list {
@@ -25,9 +28,10 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     overflow-y: auto;
-    max-height: 420px;
+    flex: 1;
+    min-height: 0;
     padding-right: 4px;
 }
 
@@ -45,12 +49,12 @@
 }
 
 .feed-list::-webkit-scrollbar-thumb:hover {
-    background: rgba(59, 130, 246, 0.45);
+    background: rgba(var(--primary-color-rgb), 0.45);
 }
 
 .feed-item {
     position: relative;
-    padding: 12px 16px 16px 56px;
+    padding: 10px 14px 10px 50px;
 
     background: rgba(148, 163, 184, 0.05);
     /* ← fondo restaurado */
@@ -78,7 +82,7 @@
     height: 9px;
     border-radius: 50%;
     background: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+    box-shadow: 0 0 0 4px rgba(var(--primary-color-rgb), 0.18);
 }
 
 .feed-item::after {
@@ -96,9 +100,9 @@
 }
 
 .feed-item:hover {
-    border-color: rgba(59, 130, 246, 0.25);
+    border-color: rgba(var(--primary-color-rgb), 0.25);
     box-shadow: 0 18px 28px rgba(15, 23, 42, 0.16);
-    background: rgba(59, 130, 246, 0.08);
+    background: rgba(var(--primary-color-rgb), 0.08);
     transform: translateY(-2px);
 }
 

@@ -1,10 +1,20 @@
 .dashboard-admin-container {
-    padding: 20px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
 }
+
+.dashboard-admin-container h1 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
 /*Comentarios para entender*/
 .dashboard-grid {
     display: grid;
-    gap: 20px;
+    gap: 14px;
 
     /* Esto crea 4 columnas iguales.
       Los 4 KPIs de arriba ocupan 1 columna cada uno (1+1+1+1 = 4).
@@ -22,7 +32,8 @@
 /* Los widgets grandes (gráfico y feed) ocupan 2 columnas */
 .grid-item-large {
     grid-column: span 2;
-    min-height: 400px;
+    min-height: 240px;
+    max-height: 320px;
 }
 
 /* --- ESTILOS DE TARJETA GENÉRICA --- */
@@ -31,11 +42,16 @@
 .card-widget {
     background-color: var(--surface-color);
     border-radius: 8px;
-    padding: 20px;
+    padding: 16px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--surface-border);
     height: 100%;
+    overflow: hidden;
     transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.card-widget h3 {
+    margin: 0 0 8px 0;
 }
 
 /* --- RESPONSIVIDAD (IMPORTANTE) --- */

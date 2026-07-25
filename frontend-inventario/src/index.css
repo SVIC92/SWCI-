@@ -11,6 +11,7 @@
   --accent-color: #38bdf8;
   --accent-contrast: #0f172a;
   --primary-color: #2563eb;
+  --primary-color-rgb: 37, 99, 235;
   --primary-hover: #1d4ed8;
   --success-color: #16a34a;
   --success-hover: #15803d;
@@ -84,6 +85,7 @@ body.light-theme {
   --accent-color: #38bdf8;
   --accent-contrast: #0f172a;
   --primary-color: #2563eb;
+  --primary-color-rgb: 37, 99, 235;
   --primary-hover: #1d4ed8;
   --success-color: #16a34a;
   --success-hover: #15803d;
@@ -128,40 +130,41 @@ body.light-theme {
 }
 
 body.dark-theme {
-  --background-color: #202123;
-  --surface-color: #1f2937;
-  --surface-border: rgba(148, 163, 184, 0.15);
-  --text-color: #e2e8f0;
-  --text-muted: #94a3b8;
-  --sidebar-bg: #202123;
-  --sidebar-text: #f8fafc;
-  --sidebar-border: rgba(148, 163, 184, 0.1);
-  --sidebar-hover: rgba(59, 130, 246, 0.25);
-  --accent-color: #60a5fa;
+  --background-color: #18181b;
+  --surface-color: #232326;
+  --surface-border: rgba(255, 255, 255, 0.1);
+  --text-color: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --sidebar-bg: #18181b;
+  --sidebar-text: #f4f4f5;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-hover: rgba(59, 130, 246, 0.16);
+  --accent-color: #38bdf8;
   --accent-contrast: #0f172a;
-  --primary-color: #60a5fa;
-  --primary-hover: #3b82f6;
+  --primary-color: #3b82f6;
+  --primary-color-rgb: 59, 130, 246;
+  --primary-hover: #1d4ed8;
   --success-color: #34d399;
   --success-hover: #22c55e;
   --warning-color: #fb923c;
   --danger-color: #f87171;
   --danger-hover: #ef4444;
-  --chip-bg: rgba(148, 163, 184, 0.2);
+  --chip-bg: rgba(255, 255, 255, 0.1);
   --success-bg: rgba(52, 211, 153, 0.15);
   --danger-bg: rgba(248, 113, 113, 0.15);
-  --table-header-bg: #1e293b;
-  --table-row-alt-bg: rgba(148, 163, 184, 0.08);
-  --table-row-hover-bg: rgba(96, 165, 250, 0.18);
-  --input-bg: #0f172a;
-  --input-border: rgba(148, 163, 184, 0.35);
-  --card-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.92));
-  --card-bg-hover: linear-gradient(135deg, rgba(42, 54, 78, 0.98), rgba(30, 41, 59, 0.95));
-  --card-border: rgba(148, 163, 184, 0.25);
-  --card-text: #e2e8f0;
-  --card-text-strong: #f8fafc;
-  --card-icon: rgba(148, 163, 184, 0.75);
-  --card-icon-hover: #f8fafc;
-  --card-description: rgba(203, 213, 225, 0.85);
+  --table-header-bg: #232326;
+  --table-row-alt-bg: rgba(255, 255, 255, 0.04);
+  --table-row-hover-bg: rgba(59, 130, 246, 0.14);
+  --input-bg: #131316;
+  --input-border: rgba(255, 255, 255, 0.16);
+  --card-bg: linear-gradient(135deg, rgba(39, 39, 42, 0.95), rgba(24, 24, 27, 0.92));
+  --card-bg-hover: linear-gradient(135deg, rgba(50, 50, 54, 0.98), rgba(39, 39, 42, 0.95));
+  --card-border: rgba(255, 255, 255, 0.14);
+  --card-text: #f4f4f5;
+  --card-text-strong: #ffffff;
+  --card-icon: rgba(255, 255, 255, 0.7);
+  --card-icon-hover: #ffffff;
+  --card-description: rgba(228, 228, 231, 0.85);
   --panel-padding: 28px;
   --panel-radius: 18px;
   --panel-gap: 20px;
@@ -172,15 +175,15 @@ body.dark-theme {
   --card-stack-gap: 22px;
   --card-padding-y: 20px;
   --card-padding-x: 24px;
-  --swal-bg: #0f172a;
-  --swal-title: #f8fafc;
-  --swal-text: #cbd5f5;
-  --swal-border: rgba(148, 163, 184, 0.25);
+  --swal-bg: #18181b;
+  --swal-title: #f4f4f5;
+  --swal-text: #d4d4d8;
+  --swal-border: rgba(255, 255, 255, 0.14);
   --swal-button-confirm-bg: #22c55e;
   --swal-button-confirm-hover: #16a34a;
   --swal-button-cancel-bg: #f87171;
   --swal-button-cancel-hover: #ef4444;
-  --swal-button-text: #0f172a;
+  --swal-button-text: #09090b;
 }
 
 body.font-size-small {

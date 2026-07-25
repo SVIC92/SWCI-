@@ -1,8 +1,9 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getHistorialActividad } from '../../api/historialActividadApi';
-import './css/FeedActividad.css'; 
+import './css/FeedActividad.css';
 import { FaUserCircle, FaClock, FaTag } from 'react-icons/fa';
+import { Skeleton, Stack } from '@mui/material';
 const capitalize = (s) => {
   if (typeof s !== 'string') return '';
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
@@ -39,7 +40,22 @@ const FeedActividad = () => {
     };
 
     if (isLoading) {
-        return <div className="feed-container">Cargando actividades...</div>;
+        return (
+            <div className="feed-container">
+                <h3>Actividad Reciente</h3>
+                <Stack spacing={1.5}>
+                    {[...Array(4)].map((_, i) => (
+                        <Stack key={i} direction="row" spacing={1.5} alignItems="center">
+                            <Skeleton variant="circular" width={32} height={32} />
+                            <Stack sx={{ flex: 1 }}>
+                                <Skeleton variant="text" width="70%" />
+                                <Skeleton variant="text" width="40%" />
+                            </Stack>
+                        </Stack>
+                    ))}
+                </Stack>
+            </div>
+        );
     }
 
     if (isError) {

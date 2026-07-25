@@ -2,12 +2,13 @@ import "./App.css";
 import "./components/styles/SweetAlert.css";
 import React, { useEffect, useMemo } from "react";
 import { useGlobalStore } from "./store/useGlobalStore";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router, Routes } from "react-router-dom";
 import AppRoutes from "./routes";
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
+import { createAppTheme } from "./theme/appTheme";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -72,36 +73,8 @@ function App() {
     body.classList.add(`density-${density}`);
   }, [theme, fontSize, density]);
 
-  const getFontSizeValue = (size) => {
-    switch (size) {
-      case "small":
-        return 12;
-      case "large":
-        return 16;
-      default:
-        return 14;
-    }
-  };
-
   const muiTheme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode: theme,
-        },
-        typography: {
-          fontSize: getFontSizeValue(fontSize),
-        },
-        components: {
-          MuiButton: {
-            styleOverrides: {
-              root: {
-                fontSize: fontSize === "large" ? "1rem" : undefined,
-              },
-            },
-          },
-        },
-      }),
+    () => createAppTheme(theme, fontSize),
     [theme, fontSize]
   );
 

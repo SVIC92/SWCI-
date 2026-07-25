@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSugerenciasReabastecimiento } from '../../api/productoApi';
 import {
     Paper, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Typography, Alert, Chip, Box
+    TableHead, TableRow, Typography, Alert, Chip, Box, Skeleton, Stack
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
@@ -15,7 +15,19 @@ const WidgetReabastecimiento = ({ idSede }) => {
     });
 
     if (!idSede) return <Alert severity="info">Seleccione una sede para ver alertas de stock.</Alert>;
-    if (isLoading) return <Typography>Cargando sugerencias...</Typography>;
+    if (isLoading) {
+        return (
+            <Paper sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                    <Skeleton variant="circular" width={24} height={24} />
+                    <Skeleton variant="text" width="60%" height={28} />
+                </Stack>
+                {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} variant="rounded" height={36} sx={{ mb: 1 }} />
+                ))}
+            </Paper>
+        );
+    }
     if (isError) return <Alert severity="error">Error al cargar sugerencias.</Alert>;
 
     if (sugerencias.length === 0) {
@@ -43,7 +55,6 @@ const WidgetReabastecimiento = ({ idSede }) => {
         <Paper
             sx={{
                 p: 2,
-                mt: 2,
                 bgcolor: 'background.paper',
                 backgroundImage: 'none', // Evita el overlay blanco en modo oscuro
                 borderRadius: 2,
@@ -52,14 +63,14 @@ const WidgetReabastecimiento = ({ idSede }) => {
                 boxShadow: 1 // Sombra suave para modo claro
             }}
         >
-            <Box display="flex" alignItems="center" mb={2}>
+            <Box display="flex" alignItems="center" mb={1.25}>
                 <WarningAmberIcon color="warning" sx={{ mr: 1 }} />
-                <Typography variant="h6" color="text.primary">
+                <Typography variant="subtitle1" fontWeight={700} color="text.primary" noWrap>
                     Sugerencias de Compra (Stock Crítico)
                 </Typography>
             </Box>
 
-            <TableContainer sx={{ maxHeight: 300 }}>
+            <TableContainer sx={{ maxHeight: 190 }}>
                 <Table stickyHeader size="small">
                     <TableHead>
                         <TableRow>

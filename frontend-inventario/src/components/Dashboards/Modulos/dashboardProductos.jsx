@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import LayoutDashboard from "../../Layouts/LayoutDashboard";
+import PageHeader from "../../PageHeader";
 import "../../styles/dashboardProductos.css";
 
 const DashboardProductos = () => {
@@ -59,6 +60,10 @@ const DashboardProductos = () => {
     return (
         <LayoutDashboard>
             <section className="dashboard-productos">
+                <PageHeader
+                    title="Gestión de Productos"
+                    subtitle="Selecciona un módulo para administrar catálogo, campañas y operaciones."
+                />
                 <h2>Gestión y Control</h2>
                 <ul className="dashboard-productos__lista">
                     {OpcionesGestion.map((opcion) => (

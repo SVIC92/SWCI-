@@ -23,6 +23,11 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
+// Acento propio del asistente IA: azul fuerte fijo, independiente del tema
+// (en modo oscuro el primary del theme es gris neutro y se veía apagado).
+const CHAT_ACCENT = '#2563eb';
+const CHAT_ACCENT_HOVER = '#1d4ed8';
+
 const ChatWidget = () => {
     const theme = useTheme(); // 2. Accedemos a las variables del tema (colores)
     const [isOpen, setIsOpen] = useState(false);
@@ -129,15 +134,15 @@ const ChatWidget = () => {
                     <Box
                         sx={{
                             p: 2,
-                            bgcolor: 'primary.main',
-                            color: 'primary.contrastText',
+                            bgcolor: CHAT_ACCENT,
+                            color: '#ffffff',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar sx={{ bgcolor: 'background.paper', color: 'primary.main', width: 32, height: 32 }}>
+                            <Avatar sx={{ bgcolor: 'background.paper', color: CHAT_ACCENT, width: 32, height: 32 }}>
                                 <BotIcon fontSize="small" />
                             </Avatar>
                             <Typography variant="subtitle1" fontWeight="bold" color="inherit">
@@ -176,8 +181,8 @@ const ChatWidget = () => {
                                         p: 1.5,
                                         borderRadius: 2,
                                         // 5. Colores de burbujas dinámicos
-                                        bgcolor: msg.sender === 'user' ? 'primary.main' : 'background.paper',
-                                        color: msg.sender === 'user' ? 'primary.contrastText' : 'text.primary',
+                                        bgcolor: msg.sender === 'user' ? CHAT_ACCENT : 'background.paper',
+                                        color: msg.sender === 'user' ? '#ffffff' : 'text.primary',
                                         boxShadow: 1,
                                         // Borde sutil para el bot en modo oscuro
                                         border: (theme.palette.mode === 'dark' && msg.sender === 'bot')
@@ -263,13 +268,12 @@ const ChatWidget = () => {
                                 }}
                             />
                             <IconButton
-                                color="primary"
                                 onClick={handleSend}
                                 disabled={!input.trim() || isLoading}
                                 sx={{
-                                    bgcolor: 'primary.light',
+                                    bgcolor: CHAT_ACCENT,
                                     color: 'white',
-                                    '&:hover': { bgcolor: 'primary.main' },
+                                    '&:hover': { bgcolor: CHAT_ACCENT_HOVER },
                                     width: 40,
                                     height: 40,
                                     // Deshabilitado visualmente correcto en dark mode
@@ -288,10 +292,15 @@ const ChatWidget = () => {
 
             {/* Botón Flotante para abrir/cerrar */}
             <Fab
-                color="primary"
                 aria-label="chat"
                 onClick={handleToggle}
-                sx={{ float: 'right', mb: 10 }}
+                sx={{
+                    float: 'right',
+                    mb: 10,
+                    bgcolor: CHAT_ACCENT,
+                    color: '#ffffff',
+                    '&:hover': { bgcolor: CHAT_ACCENT_HOVER },
+                }}
             >
                 {isOpen ? <CloseIcon /> : <BotIcon />}
             </Fab>
