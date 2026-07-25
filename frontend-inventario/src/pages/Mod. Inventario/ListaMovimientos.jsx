@@ -1,10 +1,23 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Chip, Typography } from "@mui/material";
+import { Chip } from "@mui/material";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { format } from "date-fns";
 import { listarMovimientos } from "../../api/InventarioApi";
 import TablaLista from "../../components/TablaLista";
+
+// El backend guarda "cantidad" siempre en positivo, salvo en "Ajuste Conteo" (único caso con signo real,
+// porque un conteo físico puede arrojar sobrante o faltante frente al stock del sistema).
+const CLAVES_ENTRADA = ["recep", "devoluci", "entrada"];
+const esAjusteConteo = (tipoMovimiento) => !!tipoMovimiento && tipoMovimiento.toLowerCase().includes("ajuste");
+const esEntrada = (tipoMovimiento, cantidad) => {
+  if (!tipoMovimiento) return false;
+  if (esAjusteConteo(tipoMovimiento)) return cantidad >= 0;
+  const tipo = tipoMovimiento.toLowerCase();
+  return CLAVES_ENTRADA.some((clave) => tipo.includes(clave));
+};
 
 function ListaMovimientos() {
   const navigate = useNavigate();
@@ -36,30 +49,39 @@ function ListaMovimientos() {
     { field: "nombreSede", headerName: "Sede", width: 130 },
     { field: "nombreCompletoUsuario", headerName: "Usuario", width: 160 },
     { field: "nombreRolUsuario", headerName: "Rol", width: 130 },
-    { 
-      field: "tipoMovimiento", 
-      headerName: "Tipo", 
+    {
+      field: "tipoMovimiento",
+      headerName: "Tipo",
       width: 130,
       renderCell: (params) => (
-        <Chip 
-          label={params.value} 
+        <Chip
+          label={params.value}
           size="small"
-          color={params.value.startsWith('Recep') || params.value.startsWith('Devol') ? 'success' : 'error'} 
+          color={esEntrada(params.value, params.row.cantidad) ? 'success' : 'error'}
           variant="outlined"
         />
       )
     },
-    { 
-      field: "cantidad", 
-      headerName: "Cantidad", 
-      width: 90, 
-      align: 'center', 
+    {
+      field: "cantidad",
+      headerName: "Cantidad",
+      width: 110,
+      align: 'center',
       headerAlign: 'center',
-      renderCell: (params) => (
-        <Typography sx={{ fontWeight: 'bold', color: params.value > 0 ? 'success.main' : 'error.main' }}>
-          {params.value > 0 ? `+${params.value}` : params.value}
-        </Typography>
-      )
+      renderCell: (params) => {
+        const tipo = params.row.tipoMovimiento;
+        const entrada = esEntrada(tipo, params.value);
+        const valorAbs = Math.abs(params.value);
+        return (
+          <Chip
+            size="small"
+            icon={entrada ? <ArrowUpwardIcon fontSize="small" /> : <ArrowDownwardIcon fontSize="small" />}
+            label={entrada ? `+${valorAbs}` : `-${valorAbs}`}
+            color={entrada ? 'success' : 'error'}
+            sx={{ fontWeight: 700, minWidth: 78, '& .MuiChip-icon': { fontSize: 16 } }}
+          />
+        );
+      }
     },
     {
       field: "fechaFormateada",

@@ -1,5 +1,7 @@
 package com.inventario.backend_inventario.Exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -14,6 +16,10 @@ import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final String MENSAJE_ERROR_GENERICO =
+            "Ocurrió un error inesperado. Por favor, inténtalo nuevamente o contacta al soporte si el problema persiste.";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -42,13 +48,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
+    /**
+     * Captura cualquier excepción no controlada (bugs, fallos de serialización, errores de
+     * infraestructura, etc). El detalle técnico se registra en el log del servidor, pero NUNCA
+     * se expone al cliente: el usuario siempre recibe el mismo mensaje estandarizado.
+     */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
+        logger.error("Error interno no controlado", ex);
+
         Map<String, Object> response = new HashMap<>();
         response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         response.put("error", "Error interno del servidor");
-        response.put("message", ex.getMessage());
+        response.put("message", MENSAJE_ERROR_GENERICO);
         return ResponseEntity.internalServerError().body(response);
     }
 

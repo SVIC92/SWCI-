@@ -3,6 +3,7 @@
 package com.inventario.backend_inventario.Service.Impl;
 
 import com.inventario.backend_inventario.Dto.InventarioActualDto;
+import com.inventario.backend_inventario.Dto.MermaMasivaDto;
 import com.inventario.backend_inventario.Dto.MovimientoInventarioDto;
 import com.inventario.backend_inventario.Dto.RecepcionMasivaDto;
 import com.inventario.backend_inventario.Model.*; 
@@ -84,6 +85,113 @@ public class InventarioServiceImpl implements InventarioService {
                 historialActividadService.registrarActividad(usuario, "RECEPCIÓN", descripcionAuditoria,"INVENTARIO", "MovimientoInventario", movimiento.getId(), observaciones);
         }
     }
+    @Override
+    @Transactional
+    public void registrarMerma(MermaMasivaDto mermaDto) {
+
+        Usuario usuario = getUsuarioLogueado();
+
+        Sede sede = sedeRepository.findById(mermaDto.getSedeId())
+                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + mermaDto.getSedeId()));
+
+        TipoMovimiento tipoMerma = tipoMovimientoRepository.findByTipo("Merma")
+                .orElseThrow(() -> new EntityNotFoundException("Tipo de movimiento 'Merma' no encontrado. Asegúrate de crearlo en la tabla TIPO_MOVIMIENTO."));
+
+        for (MermaMasivaDto.DetalleItem item : mermaDto.getDetalles()) {
+
+            Producto producto = productoRepository.findById(item.getProductoId())
+                    .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + item.getProductoId()));
+
+            Inventario inventario = inventarioRepository.findByProductoAndSede(producto, sede)
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "No existe stock registrado para '" + producto.getNombre() + "' en la sede '" + sede.getNombreSede() + "'"));
+
+            int stockAnterior = inventario.getStockActual();
+            int cantidadMermada = item.getCantidad();
+
+            if (stockAnterior < cantidadMermada) {
+                throw new IllegalArgumentException(
+                        "Stock insuficiente para mermar '" + producto.getNombre() + "' en la sede '" + sede.getNombreSede()
+                                + "'. Stock actual: " + stockAnterior);
+            }
+
+            int stockNuevo = stockAnterior - cantidadMermada;
+            inventario.setStockActual(stockNuevo);
+            inventarioRepository.save(inventario);
+
+            String observaciones = String.format("Motivo: %s. Stock: %d -> %d.%s",
+                    item.getMotivo(), stockAnterior, stockNuevo,
+                    (item.getObservacion() != null && !item.getObservacion().isBlank() ? " " + item.getObservacion() : ""));
+
+            MovimientoInventario movimiento = new MovimientoInventario(
+                    producto,
+                    sede,
+                    usuario,
+                    tipoMerma,
+                    cantidadMermada,
+                    observaciones
+            );
+            movimientoInventarioRepository.save(movimiento);
+
+            String descripcionAuditoria = String.format(
+                    "Registró merma de %d unidad(es) del producto '%s' (SKU: %s) en la sede '%s'. Motivo: %s. Stock: %d -> %d",
+                    cantidadMermada, producto.getNombre(), producto.getSku(), sede.getNombreSede(), item.getMotivo(), stockAnterior, stockNuevo);
+
+            historialActividadService.registrarActividad(usuario, "MERMA", descripcionAuditoria, "INVENTARIO",
+                    "MovimientoInventario", movimiento.getId(), observaciones);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void registrarAjusteConteo(Integer sedeId, Long productoId, Integer stockContado) {
+        Usuario usuario = getUsuarioLogueado();
+
+        Sede sede = sedeRepository.findById(sedeId)
+                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada ID: " + sedeId));
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado ID: " + productoId));
+
+        TipoMovimiento tipoAjuste = tipoMovimientoRepository.findByTipo("Ajuste Conteo")
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Tipo de movimiento 'Ajuste Conteo' no encontrado. Asegúrate de crearlo en la tabla TIPO_MOVIMIENTO."));
+
+        Inventario inventario = inventarioRepository.findByProductoAndSede(producto, sede)
+                .orElse(new Inventario(producto, sede, 0));
+
+        int stockAnterior = inventario.getStockActual();
+        int diferencia = stockContado - stockAnterior;
+
+        if (diferencia == 0) {
+            return;
+        }
+
+        inventario.setStockActual(stockContado);
+        inventarioRepository.save(inventario);
+
+        // A diferencia de los demás tipos de movimiento, aquí sí se guarda con signo:
+        // permite saber de un vistazo si el conteo encontró más o menos stock del esperado.
+        String observaciones = String.format("Ajuste por conteo físico. Stock: %d -> %d (%s%d).",
+                stockAnterior, stockContado, diferencia > 0 ? "+" : "", diferencia);
+
+        MovimientoInventario movimiento = new MovimientoInventario(
+                producto,
+                sede,
+                usuario,
+                tipoAjuste,
+                diferencia,
+                observaciones
+        );
+        movimientoInventarioRepository.save(movimiento);
+
+        String descripcionAuditoria = String.format(
+                "Ajustó el stock de '%s' (SKU: %s) en la sede '%s' por conteo físico. Stock: %d -> %d",
+                producto.getNombre(), producto.getSku(), sede.getNombreSede(), stockAnterior, stockContado);
+
+        historialActividadService.registrarActividad(usuario, "AJUSTE_CONTEO", descripcionAuditoria, "INVENTARIO",
+                "MovimientoInventario", movimiento.getId(), observaciones);
+    }
+
     private Usuario getUsuarioLogueado() {
         String email = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
         return usuarioRepository.findByEmail(email)

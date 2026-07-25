@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
 import {
   Box,
   Typography,
@@ -10,18 +12,31 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
+  Card,
   Select,
   MenuItem,
   IconButton,
-  FormControl
+  FormControl,
+  InputLabel,
+  Grid,
+  Autocomplete,
+  ToggleButtonGroup,
+  ToggleButton,
+  CircularProgress,
+  Chip,
+  Tooltip
 } from "@mui/material";
 
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import AddIcon from "@mui/icons-material/Add";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import Swal from "sweetalert2";
-import { useGlobalStore } from "../../store/useGlobalStore";
-import BuscadorInteligente from "../../components/BuscadorInteligente";
+import { getProductos } from "../../api/productoApi";
+import { getSedes } from "../../api/sedeApi";
+import { getInventarioActual } from "../../api/InventarioApi";
+import { solicitarMerma } from "../../api/mermaApi";
 import LayoutDashboard from "../../components/Layouts/LayoutDashboard";
+import PageHeader from "../../components/PageHeader";
 
 const MOTIVOS_MERMA = [
   { value: "VENCIMIENTO", label: "Vencimiento" },
@@ -30,590 +45,576 @@ const MOTIVOS_MERMA = [
   { value: "FALLA_TECNICA", label: "Falla Técnica" }
 ];
 
-const RegistrarMerma = () => {
-  const { user } = useGlobalStore();
+// Igual que en "Consulta de Stock": el usuario elige por qué campo busca
+// y el Autocomplete filtra el catálogo ya cargado por ese campo.
+const CAMPOS_BUSQUEDA = {
+  SKU: (p) => p.sku,
+  EAN: (p) => p.codEan,
+  NOMBRE: (p) => p.nombre
+};
 
-  const sedeUsuario = user?.sede || "Sede General";
+const RegistrarMerma = () => {
+  const navigate = useNavigate();
+
+  const [sedes, setSedes] = useState([]);
+  const [sedeId, setSedeId] = useState("");
+
+  const [stockActualLista, setStockActualLista] = useState([]);
 
   const [listaMermas, setListaMermas] = useState([]);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
+  const [catalogoProductos, setCatalogoProductos] = useState([]);
+  const [tipoBusqueda, setTipoBusqueda] = useState("SKU");
+
+  const [motivoSeleccionado, setMotivoSeleccionado] = useState("VENCIMIENTO");
+  const [cantidadSeleccionada, setCantidadSeleccionada] = useState(1);
+  const [costoSeleccionado, setCostoSeleccionado] = useState(0);
+  const [observacionSeleccionada, setObservacionSeleccionada] = useState("");
+
+  useEffect(() => {
+    getProductos()
+      .then(setCatalogoProductos)
+      .catch(() => setCatalogoProductos([]));
+
+    getSedes()
+      .then(setSedes)
+      .catch(() => setSedes([]));
+
+    getInventarioActual()
+      .then((res) => setStockActualLista(res.data || []))
+      .catch(() => setStockActualLista([]));
+  }, []);
+
+  const sedeSeleccionada = useMemo(
+    () => sedes.find((s) => String(s.idSede) === String(sedeId)) || null,
+    [sedes, sedeId]
+  );
+
+  // Solo se pueden mermar productos que ya tienen un registro de stock (aunque sea 0) en la sede elegida.
+  const productosDeSede = useMemo(() => {
+    if (!sedeSeleccionada) return [];
+    const skusEnSede = new Set(
+      stockActualLista
+        .filter((inv) => inv.nombreSede === sedeSeleccionada.nombreSede)
+        .map((inv) => inv.skuProducto)
+    );
+    return catalogoProductos.filter((p) => skusEnSede.has(p.sku));
+  }, [catalogoProductos, stockActualLista, sedeSeleccionada]);
+
+  const obtenerStockDisponible = (producto) => {
+    if (!producto || !sedeSeleccionada) return 0;
+    const registro = stockActualLista.find(
+      (inv) =>
+        inv.skuProducto === producto.codigo &&
+        inv.nombreSede === sedeSeleccionada.nombreSede
+    );
+    return registro?.stockActual ?? 0;
+  };
 
   const handleSeleccionarProducto = (producto) => {
-    if (!producto) return;
+    if (!producto) {
+      setProductoSeleccionado(null);
+      return;
+    }
 
-    setProductoSeleccionado(producto);
+    // Normaliza la entidad Producto real (id_producto, uni_medida,
+    // precio_venta, codEan...) a los nombres que ya usa el resto del form.
+    const normalizado = {
+      id: producto.id_producto,
+      codigo: producto.sku,
+      codigoBarras: producto.codEan,
+      nombre: producto.nombre,
+      unidadMedida: producto.uni_medida,
+      precio: producto.precio_venta ?? producto.precio_compra ?? 0
+    };
 
-    if (listaMermas.find((item) => item.id === producto.id)) {
+    setProductoSeleccionado(normalizado);
+    setCostoSeleccionado(normalizado.precio);
+    setCantidadSeleccionada(1);
+
+    if (listaMermas.find((item) => item.id === normalizado.id)) {
       Swal.fire({
         title: "Producto duplicado",
         text: "Este producto ya está agregado.",
         icon: "warning"
       });
-      return;
     }
   };
 
-  const agregarProducto = () => {
-    if (!productoSeleccionado) {
-      Swal.fire(
-        "Seleccione un producto",
-        "Debe buscar un producto primero.",
-        "warning"
-      );
-      return;
-    }
-
+  const insertarFila = (stockDisponible, cantidad) => {
     setListaMermas((prev) => [
       ...prev,
       {
         id: productoSeleccionado.id,
-        codigo:
-          productoSeleccionado.codigo ||
-          productoSeleccionado.codigoBarras,
+        codigo: productoSeleccionado.codigo || productoSeleccionado.codigoBarras,
         nombre: productoSeleccionado.nombre,
-        unidad:
-          productoSeleccionado.unidadMedida || "UND",
-        stockActual: productoSeleccionado.stock || 0,
-        cantidadMermar: 1,
-        costo: productoSeleccionado.precio || 0,
-        motivo: "VENCIMIENTO",
-        observacion: ""
+        unidad: productoSeleccionado.unidadMedida || "UND",
+        stockActual: stockDisponible,
+        cantidadMermar: cantidad,
+        costo: Number(costoSeleccionado) || 0,
+        motivo: motivoSeleccionado,
+        observacion: observacionSeleccionada,
+        stockInsuficiente: cantidad > stockDisponible
       }
     ]);
 
     setProductoSeleccionado(null);
+    setMotivoSeleccionado("VENCIMIENTO");
+    setCantidadSeleccionada(1);
+    setCostoSeleccionado(0);
+    setObservacionSeleccionada("");
+  };
+
+  const agregarProducto = () => {
+    if (!sedeId) {
+      Swal.fire("Seleccione una sede", "Debe elegir la sede donde se registrará la merma.", "warning");
+      return;
+    }
+
+    if (!productoSeleccionado) {
+      Swal.fire("Seleccione un producto", "Debe buscar un producto primero.", "warning");
+      return;
+    }
+
+    const cantidad = Number(cantidadSeleccionada) || 0;
+
+    if (cantidad <= 0) {
+      Swal.fire("Cantidad inválida", "El número de unidades debe ser mayor a 0.", "error");
+      return;
+    }
+
+    const stockDisponible = obtenerStockDisponible(productoSeleccionado);
+
+    // Se permite mermar con stock insuficiente: solo se advierte, no se bloquea.
+    if (cantidad > stockDisponible) {
+      Swal.fire({
+        title: "Stock insuficiente",
+        text: `Solo hay ${stockDisponible} unidad(es) disponibles de "${productoSeleccionado.nombre}" en esta sede. Puedes continuar; quedará marcado para que el aprobador lo revise.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Agregar de todas formas",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          insertarFila(stockDisponible, cantidad);
+        }
+      });
+      return;
+    }
+
+    insertarFila(stockDisponible, cantidad);
   };
 
   const eliminarProducto = (id) => {
-    setListaMermas((prev) =>
-      prev.filter((item) => item.id !== id)
-    );
+    setListaMermas((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const limpiarLista = () => {
+    setListaMermas([]);
   };
 
   const actualizarFila = (id, campo, valor) => {
     setListaMermas((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, [campo]: valor }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const actualizado = { ...item, [campo]: valor };
+        if (campo === "cantidadMermar") {
+          actualizado.stockInsuficiente = Number(valor) > item.stockActual;
+        }
+        return actualizado;
+      })
     );
   };
 
-  const handleSubmit = async () => {
-    if (listaMermas.length === 0) {
+  const { mutate: enviarSolicitud, isPending } = useMutation({
+    mutationFn: solicitarMerma,
+    onSuccess: () => {
       Swal.fire(
-        "Lista vacía",
-        "Agrega productos primero.",
-        "info"
+        "Solicitud enviada",
+        "La solicitud de merma quedó registrada en estado Solicitado, pendiente de aprobación.",
+        "success"
       );
+      setListaMermas([]);
+    },
+    onError: (error) => {
+      Swal.fire(
+        "Error",
+        error.response?.data?.message || "No se pudo registrar la solicitud.",
+        "error"
+      );
+    }
+  });
+
+  const handleSubmit = async () => {
+    if (!sedeId) {
+      Swal.fire("Seleccione una sede", "Debe elegir la sede donde se registrará la merma.", "warning");
       return;
     }
 
-    const filaInvalida = listaMermas.find(
-      (item) =>
-        item.cantidadMermar <= 0 ||
-        item.cantidadMermar > item.stockActual
-    );
+    if (listaMermas.length === 0) {
+      Swal.fire("Lista vacía", "Agrega productos primero.", "info");
+      return;
+    }
 
-    if (filaInvalida) {
+    const cantidadInvalida = listaMermas.find((item) => Number(item.cantidadMermar) <= 0);
+    if (cantidadInvalida) {
       Swal.fire({
         title: "Cantidad inválida",
-        text: `La cantidad supera el stock de ${filaInvalida.nombre}`,
+        text: `La cantidad de "${cantidadInvalida.nombre}" debe ser mayor a 0.`,
         icon: "error"
       });
       return;
     }
 
+    const hayInsuficientes = listaMermas.some(
+      (item) => Number(item.cantidadMermar) > item.stockActual
+    );
+
     const result = await Swal.fire({
       title: "¿Confirmar solicitud?",
-      text: "Se registrará la merma.",
+      html: hayInsuficientes
+        ? "Se enviará la solicitud de merma para aprobación.<br/><b>Atención:</b> uno o más productos superan el stock disponible actualmente."
+        : "Se enviará la solicitud de merma para aprobación.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, confirmar",
+      confirmButtonText: "Sí, enviar",
       cancelButtonText: "Cancelar"
     });
 
     if (!result.isConfirmed) return;
 
-    try {
-      // AQUÍ TU API
-      // await registrarMermasApi(listaMermas);
+    const payload = {
+      sedeId: Number(sedeId),
+      items: listaMermas.map((item) => ({
+        productoId: item.id,
+        cantidad: Number(item.cantidadMermar),
+        motivo: item.motivo,
+        observacion: item.observacion || null
+      }))
+    };
 
-      Swal.fire(
-        "Éxito",
-        "Merma registrada correctamente.",
-        "success"
-      );
-
-      setListaMermas([]);
-    } catch (error) {
-      Swal.fire(
-        "Error",
-        "No se pudo registrar.",
-        "error"
-      );
-    }
+    enviarSolicitud(payload);
   };
 
-  const labelStyle = {
-    width: 250,
-    background: "#efefef",
-    borderBottom: "1px solid #d9d9d9",
-    borderRight: "1px solid #d9d9d9",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    fontWeight: "bold",
-    fontSize: "20px",
-    minHeight: 78
-  };
-
-  const fieldStyle = {
-    flex: 1,
-    padding: 2,
-    borderBottom: "1px solid #d9d9d9"
-  };
-
-  const tabStyle = {
-    flex: 1,
-    border: "1px solid #d9d9d9",
-    borderRadius: 0,
-    color: "#666",
-    fontWeight: 700
-  };
-
-  const tabActive = {
-    ...tabStyle,
-    background: "#dbe5f1",
-    color: "#1976d2"
-  };
+  const costoTotalSeleccionado = (Number(costoSeleccionado) || 0) * (Number(cantidadSeleccionada) || 0);
 
   return (
     <LayoutDashboard>
-
-      <Box
-        sx={{
-          p: 2,
-          bgcolor: "#f5f5f5",
-          minHeight: "100vh"
-        }}
-      >
-        <Paper
-          elevation={2}
-          sx={{
-            maxWidth: 1050,
-            margin: "0 auto",
-            borderRadius: 2,
-            p: 3
-          }}
-        >
-          {/* HEADER */}
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Typography
-              sx={{
-                fontSize: "3rem",
-                fontWeight: 900,
-                color: "#000"
-              }}
+      <PageHeader
+        title="Merma de Productos"
+        subtitle={sedeSeleccionada ? `Sede: ${sedeSeleccionada.nombreSede}` : "Seleccione una sede"}
+        actions={
+          <>
+            <Button variant="outlined" onClick={() => navigate("/dashboard-inventario")}>
+              Volver
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteOutlineIcon />}
+              onClick={limpiarLista}
+              disabled={listaMermas.length === 0}
             >
-              MERMA DE PRODUCTOS
+              Limpiar
+            </Button>
+          </>
+        }
+      />
+
+      <Card sx={{ p: 3, maxWidth: 1100, mx: "auto" }}>
+        <Grid container spacing={2.5}>
+          {/* SEDE */}
+          <Grid size={12}>
+            <FormControl fullWidth size="small" required>
+              <InputLabel id="sede-label">Sede</InputLabel>
+              <Select
+                labelId="sede-label"
+                label="Sede"
+                value={sedeId}
+                onChange={(e) => {
+                  setSedeId(e.target.value);
+                  setProductoSeleccionado(null);
+                }}
+              >
+                <MenuItem value="">
+                  <em>Seleccione una sede</em>
+                </MenuItem>
+                {sedes.map((sede) => (
+                  <MenuItem key={sede.idSede} value={String(sede.idSede)}>
+                    {sede.nombreSede}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {/* PRODUCTO */}
+          <Grid size={12}>
+            <Typography
+              variant="overline"
+              color="text.secondary"
+              sx={{ fontWeight: 700, letterSpacing: "0.06em" }}
+            >
+              Producto
             </Typography>
 
+            <ToggleButtonGroup
+              color="primary"
+              value={tipoBusqueda}
+              exclusive
+              size="small"
+              onChange={(e, valor) => {
+                if (valor) {
+                  setTipoBusqueda(valor);
+                  setProductoSeleccionado(null);
+                }
+              }}
+              sx={{ mt: 0.5, mb: 1.5 }}
+            >
+              {Object.keys(CAMPOS_BUSQUEDA).map((campo) => (
+                <ToggleButton key={campo} value={campo}>
+                  {campo}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+
             <Box display="flex" gap={1}>
-              <Button variant="outlined">
-                ← VOLVER
-              </Button>
+              <Autocomplete
+                fullWidth
+                options={productosDeSede}
+                value={null}
+                getOptionLabel={(producto) => CAMPOS_BUSQUEDA[tipoBusqueda](producto) || ""}
+                isOptionEqualToValue={(option, value) => option.id_producto === value?.id_producto}
+                onChange={(e, producto) => handleSeleccionarProducto(producto)}
+                disabled={!sedeId}
+                noOptionsText={sedeId ? "No hay productos con stock registrado en esta sede" : ""}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    placeholder={
+                      sedeId
+                        ? `Buscar por ${tipoBusqueda.toLowerCase()} (ej. 'laptop')`
+                        : "Seleccione una sede primero"
+                    }
+                  />
+                )}
+                sx={{ flex: 1 }}
+              />
 
-              <Button color="error" variant="outlined">
-                🗑 LIMPIAR
+              <Button
+                variant="contained"
+                onClick={agregarProducto}
+                sx={{ minWidth: 48 }}
+                disabled={!sedeId}
+              >
+                <AddIcon />
               </Button>
             </Box>
-          </Box>
+          </Grid>
 
-          {/* FORMULARIO */}
-          <Box border="1px solid #d9d9d9">
-            {/* PRODUCTO */}
-            <Box display="flex">
-              <Box sx={labelStyle}>
-                Producto
-              </Box>
+          {/* DESCRIPCIÓN */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Descripción"
+              value={productoSeleccionado?.nombre || ""}
+              slotProps={{ input: { readOnly: true } }}
+            />
+          </Grid>
 
-              <Box sx={{ flex: 1, p: 2 }}>
-                <Box display="flex" mb={2}>
-                  <Button sx={tabActive}>
-                    SKU
-                  </Button>
+          {/* TIPO MERMA */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="tipo-merma-label">Tipo de Merma</InputLabel>
+              <Select
+                labelId="tipo-merma-label"
+                label="Tipo de Merma"
+                value={motivoSeleccionado}
+                onChange={(e) => setMotivoSeleccionado(e.target.value)}
+              >
+                {MOTIVOS_MERMA.map((motivo) => (
+                  <MenuItem key={motivo.value} value={motivo.value}>
+                    {motivo.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-                  <Button sx={tabStyle}>
-                    EAN
-                  </Button>
+          {/* UNIDAD */}
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Unidad de Medida"
+              value={productoSeleccionado?.unidadMedida || "UND"}
+              slotProps={{ input: { readOnly: true } }}
+            />
+          </Grid>
 
-                  <Button sx={tabStyle}>
-                    NOMBRE
-                  </Button>
-                </Box>
+          {/* NUMERO DE UNIDADES */}
+          <Grid size={{ xs: 6, sm: 4 }}>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              label="N° de Unidades"
+              value={cantidadSeleccionada}
+              onChange={(e) => setCantidadSeleccionada(e.target.value)}
+              slotProps={{ htmlInput: { min: 1 } }}
+            />
+          </Grid>
 
-                <Box display="flex" gap={1}>
-                  <Box flex={1}>
-                    <BuscadorInteligente
-                      onSelect={
-                        handleSeleccionarProducto
+          {/* COSTO (solo lectura, viene del precio del producto) */}
+          <Grid size={{ xs: 6, sm: 4 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Costo"
+              value={`S/ ${(Number(costoSeleccionado) || 0).toFixed(2)}`}
+              slotProps={{ input: { readOnly: true } }}
+            />
+          </Grid>
+
+          {/* COSTO TOTAL (solo lectura) */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Costo Total"
+              value={`S/ ${costoTotalSeleccionado.toFixed(2)}`}
+              slotProps={{ input: { readOnly: true } }}
+            />
+          </Grid>
+
+          {/* OBSERVACIÓN */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Observación (opcional)"
+              value={observacionSeleccionada}
+              onChange={(e) => setObservacionSeleccionada(e.target.value)}
+            />
+          </Grid>
+        </Grid>
+      </Card>
+
+      {/* TABLA */}
+      <TableContainer component={Card} sx={{ mt: 3, maxWidth: 1100, mx: "auto" }}>
+        <Table size="small">
+          <TableHead sx={{ bgcolor: "action.hover" }}>
+            <TableRow>
+              <TableCell>SKU</TableCell>
+              <TableCell>Producto</TableCell>
+              <TableCell>Unidad de Medida</TableCell>
+              <TableCell>Stock</TableCell>
+              <TableCell>N° de Unidades</TableCell>
+              <TableCell>Costo</TableCell>
+              <TableCell>Costo Total</TableCell>
+              <TableCell>Tipo de Merma</TableCell>
+              <TableCell align="right">Acción</TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {listaMermas.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                  <Typography color="text.secondary" variant="body2">
+                    No hay productos agregados.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              listaMermas.map((item) => (
+                <TableRow key={item.id} hover>
+                  <TableCell>{item.codigo}</TableCell>
+                  <TableCell>{item.nombre}</TableCell>
+                  <TableCell>{item.unidad}</TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      {item.stockActual}
+                      {item.stockInsuficiente && (
+                        <Tooltip title="Stock insuficiente: la cantidad supera el stock disponible">
+                          <WarningAmberIcon color="warning" fontSize="small" />
+                        </Tooltip>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={item.cantidadMermar}
+                      onChange={(e) =>
+                        actualizarFila(item.id, "cantidadMermar", parseInt(e.target.value) || 1)
                       }
+                      slotProps={{ htmlInput: { min: 1 } }}
+                      sx={{ width: 90 }}
+                      error={item.stockInsuficiente}
                     />
-                  </Box>
-
-                  <Button
-                    variant="contained"
-                    onClick={agregarProducto}
-                    sx={{
-                      minWidth: 45,
-                      height: 40
-                    }}
-                  >
-                    →
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-
-            {/* DESCRIPCIÓN */}
-            <Box display="flex">
-              <Box sx={labelStyle}>
-                Descripción
-              </Box>
-
-              <Box sx={fieldStyle}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  value={
-                    productoSeleccionado?.nombre ||
-                    ""
-                  }
-                />
-              </Box>
-            </Box>
-
-            {/* TIPO MERMA */}
-            <Box display="flex">
-              <Box sx={labelStyle}>
-                Tipo de Merma
-              </Box>
-
-              <Box sx={fieldStyle}>
-                <FormControl fullWidth size="small">
-                  <Select defaultValue="">
-                    <MenuItem value="">
-                      Seleccione
-                    </MenuItem>
-
-                    {MOTIVOS_MERMA.map(
-                      (motivo) => (
-                        <MenuItem
-                          key={motivo.value}
-                          value={motivo.value}
-                        >
+                  </TableCell>
+                  <TableCell>S/ {Number(item.costo).toFixed(2)}</TableCell>
+                  <TableCell>S/ {(item.costo * item.cantidadMermar).toFixed(2)}</TableCell>
+                  <TableCell>
+                    <Select
+                      size="small"
+                      value={item.motivo}
+                      onChange={(e) => actualizarFila(item.id, "motivo", e.target.value)}
+                      sx={{ minWidth: 140 }}
+                    >
+                      {MOTIVOS_MERMA.map((motivo) => (
+                        <MenuItem key={motivo.value} value={motivo.value}>
                           {motivo.label}
                         </MenuItem>
-                      )
-                    )}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-
-            {/* UNIDAD */}
-            <Box display="flex">
-              <Box sx={labelStyle}>
-                Unidad de Medida
-              </Box>
-
-              <Box sx={fieldStyle}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  value={
-                    productoSeleccionado?.unidadMedida ||
-                    "UND"
-                  }
-                />
-              </Box>
-            </Box>
-
-            {/* NUMERO + COSTO */}
-            <Box display="flex">
-              <Box sx={labelStyle}>
-                N° de Unidades
-              </Box>
-
-              <Box
-                sx={{
-                  flex: 1,
-                  display: "flex"
-                }}
-              >
-                <Box flex={1} p={1}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                  />
-                </Box>
-
-                <Box
-                  sx={{
-                    width: 250,
-                    background: "#efefef",
-                    borderLeft:
-                      "1px solid #d9d9d9",
-                    borderRight:
-                      "1px solid #d9d9d9",
-                    display: "flex",
-                    justifyContent:
-                      "center",
-                    alignItems: "center",
-                    fontWeight: "bold",
-                    fontSize: 22
-                  }}
-                >
-                  Costo
-                </Box>
-
-                <Box flex={1} p={1}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                  />
-                </Box>
-              </Box>
-            </Box>
-
-            {/* COSTO TOTAL */}
-            <Box display="flex">
-              <Box sx={labelStyle}>
-                Costo Total
-              </Box>
-
-              <Box sx={fieldStyle}>
-                <TextField
-                  fullWidth
-                  size="small"
-                />
-              </Box>
-            </Box>
-          </Box>
-
-          {/* TABLA */}
-          <TableContainer
-            component={Paper}
-            sx={{
-              mt: 3,
-              border:
-                "1px solid #d9d9d9",
-              borderRadius: 1,
-              boxShadow: "none"
-            }}
-          >
-            <Table size="small">
-              <TableHead
-                sx={{
-                  background:
-                    "#ececec"
-                }}
-              >
-                <TableRow>
-                  <TableCell>
-                    ✓
+                      ))}
+                    </Select>
                   </TableCell>
-                  <TableCell>
-                    SKU
-                  </TableCell>
-                  <TableCell>
-                    PRODUCTO
-                  </TableCell>
-                  <TableCell>
-                    UNIDAD DE MEDIDA
-                  </TableCell>
-                  <TableCell>
-                    N° DE UNIDADES
-                  </TableCell>
-                  <TableCell>
-                    COSTO
-                  </TableCell>
-                  <TableCell>
-                    COSTO TOTAL
-                  </TableCell>
-                  <TableCell>
-                    TIPO DE MERMA
-                  </TableCell>
-                  <TableCell>
-                    ACCIÓN
+                  <TableCell align="right">
+                    <IconButton color="error" size="small" onClick={() => eliminarProducto(item.id)}>
+                      <DeleteOutlineIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
-              </TableHead>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-              <TableBody>
-                {listaMermas.length ===
-                  0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={9}
-                      align="center"
-                      sx={{
-                        py: 6,
-                        color: "#777"
-                      }}
-                    >
-                      No hay productos
-                      agregados.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  listaMermas.map(
-                    (item) => (
-                      <TableRow
-                        key={item.id}
-                      >
-                        <TableCell>
-                          ✓
-                        </TableCell>
+      {listaMermas.some((item) => item.stockInsuficiente) && (
+        <Box sx={{ maxWidth: 1100, mx: "auto", mt: 1.5 }}>
+          <Chip
+            icon={<WarningAmberIcon />}
+            color="warning"
+            variant="outlined"
+            label="Hay productos con stock insuficiente. Puedes enviar la solicitud igual; el aprobador lo revisará."
+          />
+        </Box>
+      )}
 
-                        <TableCell>
-                          {item.codigo}
-                        </TableCell>
-
-                        <TableCell>
-                          {item.nombre}
-                        </TableCell>
-
-                        <TableCell>
-                          {item.unidad}
-                        </TableCell>
-
-                        <TableCell>
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={
-                              item.cantidadMermar
-                            }
-                            onChange={(
-                              e
-                            ) =>
-                              actualizarFila(
-                                item.id,
-                                "cantidadMermar",
-                                parseInt(
-                                  e.target
-                                    .value
-                                ) || 1
-                              )
-                            }
-                          />
-                        </TableCell>
-
-                        <TableCell>
-                          S/
-                          {item.costo}
-                        </TableCell>
-
-                        <TableCell>
-                          S/
-                          {(
-                            item.costo *
-                            item.cantidadMermar
-                          ).toFixed(2)}
-                        </TableCell>
-
-                        <TableCell>
-                          {item.motivo}
-                        </TableCell>
-
-                        <TableCell>
-                          <IconButton
-                            color="error"
-                            onClick={() =>
-                              eliminarProducto(
-                                item.id
-                              )
-                            }
-                          >
-                            <DeleteOutlineIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  )
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* BOTONES */}
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            mt={4}
-          >
-            <Box display="flex" gap={2}>
-              <Button
-                variant="contained"
-                sx={{
-                  background:
-                    "#9c27b0",
-                  px: 4,
-                  py: 1.3,
-                  fontWeight: "bold"
-                }}
-                onClick={agregarProducto}
-              >
-                ➕ AGREGAR
-              </Button>
-
-              <Button
-                variant="contained"
-                color="secondary"
-                sx={{
-                  px: 4,
-                  py: 1.3,
-                  fontWeight: "bold"
-                }}
-              >
-                🗑 Eliminar
-              </Button>
-            </Box>
-
-            <Button
-              variant="contained"
-              disabled={
-                listaMermas.length ===
-                0
-              }
-              onClick={handleSubmit}
-              sx={{
-                background:
-                  "#d9d9d9",
-                color: "#777",
-                px: 5,
-                fontWeight: "bold"
-              }}
-            >
-              ▶ CONFIRMAR SOLICITUD
-            </Button>
-          </Box>
-        </Paper>
+      {/* BOTONES */}
+      <Box
+        display="flex"
+        justifyContent="flex-end"
+        flexWrap="wrap"
+        gap={2}
+        mt={3}
+        sx={{ maxWidth: 1100, mx: "auto" }}
+      >
+        <Button
+          variant="contained"
+          disabled={listaMermas.length === 0 || isPending}
+          onClick={handleSubmit}
+          startIcon={isPending ? <CircularProgress size={18} color="inherit" /> : null}
+        >
+          {isPending ? "Enviando..." : "Confirmar Solicitud"}
+        </Button>
       </Box>
-
-
     </LayoutDashboard>
-
-
   );
 };
 

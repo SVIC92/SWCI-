@@ -1,9 +1,15 @@
 import { useNavigate } from "react-router-dom";
+import { useGlobalStore } from "../../../store/useGlobalStore";
 import LayoutDashboard from "../../Layouts/LayoutDashboard";
 import "../../styles/dashboardProductos.css";
 
+const ROLES_APROBADORES_CONTEO = ["Administrador", "Jefe de Inventario"];
+
 const DashboardConteoI = () => {
     const navigate = useNavigate();
+    const user = useGlobalStore((state) => state.user);
+    const puedeAprobarConteo = ROLES_APROBADORES_CONTEO.includes(user?.rol);
+
     const OpcionGestion = [
         {
             id: "lista-conteo-inventario",
@@ -19,12 +25,12 @@ const DashboardConteoI = () => {
             descripcion: "Generación de hojas de conteo (Programado o Sorpresivo) de inventario.",
             ruta: "/generar-conteo-inventario",
         },
-        {
+        ...(puedeAprobarConteo ? [{
             id: "aprobar-desaprobar-conteo",
             titulo: "Aprobar/Desaprobar Conteo",
             descripcion: "Gestiona la aprobación o desaprobación de los conteos de inventario realizados.",
             ruta: "/aprobar-desaprobar-conteo",
-        },
+        }] : []),
     ];
 
     const manejarClick = (ruta) => {

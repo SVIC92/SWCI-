@@ -1,9 +1,15 @@
 import { useNavigate } from "react-router-dom";
+import { useGlobalStore } from "../../../store/useGlobalStore";
 import LayoutDashboard from "../../Layouts/LayoutDashboard";
 import "../../styles/dashboardProductos.css";
 
+const ROLES_APROBADORES_MERMA = ["Administrador", "Jefe de Inventario"];
+
 const DashboardInventario = () => {
     const navigate = useNavigate();
+    const user = useGlobalStore((state) => state.user);
+    const puedeAprobarMerma = ROLES_APROBADORES_MERMA.includes(user?.rol);
+
     const OpcionInventario = [
         {
             id: "consulta-stock",
@@ -35,9 +41,15 @@ const DashboardInventario = () => {
         {
             id: "merma",
             titulo: "Merma de Productos",
-            descripcion: "Registra la merma de productos en el inventario",
+            descripcion: "Registra una solicitud de merma de productos en el inventario",
             ruta: "/inventario/merma/registrar",
         },
+        ...(puedeAprobarMerma ? [{
+            id: "gestion-merma",
+            titulo: "Aprobar/Rechazar Merma",
+            descripcion: "Revisa y aprueba o rechaza las solicitudes de merma registradas.",
+            ruta: "/inventario/merma/gestion",
+        }] : []),
         {
             id: "importar-ventas",
             titulo: "Importar Ventas",

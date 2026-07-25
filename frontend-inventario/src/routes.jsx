@@ -9,6 +9,13 @@ import ListaInventario from "./pages/Mod. Inventario/ListaInventario";
 import BusquedaPersonalizadaStock from "./pages/Mod. Inventario/BusquedaPersonalizadaStock";
 
 import AuditoriaActividadUsuario from "./pages/Mod. Reportes/AuditoriaActividadUsuario";
+import ReporteQuiebreStock from "./pages/Mod. Reportes/ReporteQuiebreStock";
+import ReporteValorizado from "./pages/Mod. Reportes/ReporteValorizado";
+import ReporteMerma from "./pages/Mod. Reportes/ReporteMerma";
+import ReporteDiferencias from "./pages/Mod. Reportes/ReporteDiferencias";
+import ReporteStockMuerto from "./pages/Mod. Reportes/ReporteStockMuerto";
+import ReporteEntradas from "./pages/Mod. Reportes/ReporteEntradas";
+import ReporteSalidas from "./pages/Mod. Reportes/ReporteSalidas";
 import Login from "./pages/Authenticación/Login";
 import ForgotPassword from "./pages/Authenticación/ForgotPassword";
 import ResetPassword from "./pages/Authenticación/ResetPassword";
@@ -54,10 +61,14 @@ import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
 import GestionTransferencias from "./pages/Mod. Inventario/GestionTransferencias";
 import SolicitarTransferencia from "./pages/Mod. Inventario/SolicitarTransferencia";
 import RegistrarMerma from "./pages/Mod. Inventario/RegistrarMerma";
+import GestionMermas from "./pages/Mod. Inventario/GestionMermas";
 import DashboardInventario from "./components/Dashboards/Modulos/dashboardInventario";
 
 
 import DashboardConteoI from "./components/Dashboards/Modulos/dashboardConteoI";
+import GenerarConteoInventario from "./pages/Mod. Conteo Inventario/GenerarConteoInventario";
+import ListaConteoInventario from "./pages/Mod. Conteo Inventario/ListaConteoInventario";
+import AprobarConteoInventario from "./pages/Mod. Conteo Inventario/AprobarConteoInventario";
 
 import DashboardReportes from "./components/Dashboards/Modulos/dashboardReportes";
 
@@ -340,6 +351,24 @@ const RutasConteoInventario = [
     ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
     DashboardConteoI
   ),
+  RutaProtegida(
+    "generarConteoInventario",
+    "/generar-conteo-inventario",
+    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
+    GenerarConteoInventario
+  ),
+  RutaProtegida(
+    "listaConteoInventario",
+    "/lista-conteo-inventario",
+    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
+    ListaConteoInventario
+  ),
+  RutaProtegida(
+    "aprobarConteoInventario",
+    "/aprobar-desaprobar-conteo",
+    ADMIN_JEFE, // Solo Admin o Jefe de Inventario aprueban/rechazan
+    AprobarConteoInventario
+  ),
 ];
 
 // Rutas de Reportes
@@ -355,6 +384,48 @@ const RutasReportes = [
     "/auditoria/actividad/usuario",
     ALL_ROLES,
     AuditoriaActividadUsuario
+  ),
+  RutaProtegida(
+    "reporteQuiebreStock",
+    "/reporte-quiebre-stock",
+    ALL_ROLES,
+    ReporteQuiebreStock
+  ),
+  RutaProtegida(
+    "reporteValorizado",
+    "/reporte-valorizado",
+    ALL_ROLES,
+    ReporteValorizado
+  ),
+  RutaProtegida(
+    "reporteMerma",
+    "/reporte-merma",
+    ALL_ROLES,
+    ReporteMerma
+  ),
+  RutaProtegida(
+    "reporteDiferencias",
+    "/reporte-diferencias",
+    ALL_ROLES,
+    ReporteDiferencias
+  ),
+  RutaProtegida(
+    "reporteStockMuerto",
+    "/reporte-stock-muerto",
+    ALL_ROLES,
+    ReporteStockMuerto
+  ),
+  RutaProtegida(
+    "reporteEntradas",
+    "/reporte-entradas",
+    ALL_ROLES,
+    ReporteEntradas
+  ),
+  RutaProtegida(
+    "reporteSalidas",
+    "/reporte-salidas",
+    ALL_ROLES,
+    ReporteSalidas
   ),
 ];
 
@@ -402,7 +473,7 @@ const RutasInventario = [
   ,
   RutaProtegida(
     "gestion-transferencias",
-    "//inventario/transferencia/gestion",
+    "/inventario/transferencia/gestion",
     ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
     GestionTransferencias
   ),
@@ -418,6 +489,13 @@ const RutasInventario = [
     "/inventario/merma/registrar",
     ADMIN_JEFE_INV_OP_RECEPCION_TIENDA, // Los roles que desees que tengan acceso
     RegistrarMerma
+  ),
+
+  RutaProtegida(
+    "gestion-mermas",
+    "/inventario/merma/gestion",
+    ADMIN_JEFE, // Solo Admin o Jefe de Inventario aprueban/rechazan
+    GestionMermas
   ),
 
 ];

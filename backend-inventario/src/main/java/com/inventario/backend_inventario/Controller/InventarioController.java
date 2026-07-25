@@ -35,8 +35,8 @@ public class InventarioController {
             // Error si el Producto o Sede no existen
             return ResponseEntity.status(404).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-            // Error genérico
-            return ResponseEntity.status(500).body(Map.of("message", "Error interno al registrar la recepción", "error", e.getMessage()));
+            // Error genérico: no se expone el detalle técnico al cliente
+            return ResponseEntity.status(500).body(Map.of("message", "No se pudo registrar la recepción. Inténtalo nuevamente."));
         }
     }
 
