@@ -14,6 +14,8 @@ import com.inventario.backend_inventario.Model.Producto;
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
     boolean existsBySku(String sku);
 
+    java.util.Optional<Producto> findBySku(String sku);
+
     boolean existsByCodEan(String codEan);
 
     @Query(value = "SELECT * FROM PRODUCTO p WHERE similarity(p.nombre, :nombre) > 0.25 ORDER BY similarity(p.nombre, :nombre) DESC LIMIT 10", nativeQuery = true)

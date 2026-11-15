@@ -21,6 +21,8 @@ public class HojaConteoResponseDto {
     private LocalDateTime fechaGeneracion;
     private LocalDateTime fechaConteo;
     private LocalDateTime fechaAprobacion;
+    private String nombreModificador;
+    private LocalDateTime fechaModificacion;
     private String motivoRechazo;
     private List<DetalleConteoResponseDto> detalles;
 }

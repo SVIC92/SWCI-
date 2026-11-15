@@ -12,6 +12,12 @@ const DashboardSedes = () => {
 			descripcion: "Consulta y administra la información de las sedes.",
 			ruta: "/lista-sedes",
 		},
+		{
+			id: "inventario-sede",
+			titulo: "Inventario por Sede",
+			descripcion: "Asocia productos a cada sede y consulta su stock.",
+			ruta: "/sedes/inventario",
+		},
 	];
 	const OpcionesOperacion = [
 		{

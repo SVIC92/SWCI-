@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class InventarioActualDto {
 
     private Long idInventario;
+    private Long idProducto;
     private String skuProducto;
     private String nombreProducto;
     private String nombreSede;

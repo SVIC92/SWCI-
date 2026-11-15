@@ -52,6 +52,15 @@ public class ConteoInventarioController {
     }
 
     /**
+     * 2b. MODIFICAR EL CONTEO ya registrado (solo mientras esté CONTADA, antes de aprobar/rechazar)
+     */
+    @PutMapping("/{id}/modificar")
+    public ResponseEntity<HojaConteoResponseDto> modificarConteo(@PathVariable Long id, @Valid @RequestBody RegistrarConteoRequestDto dto) {
+        Usuario usuario = getUsuarioAutenticado();
+        return ResponseEntity.ok(conteoService.modificarConteo(id, dto, usuario.getId_u()));
+    }
+
+    /**
      * 3. LISTAR TODAS (para la vista general / historial de conteos)
      */
     @GetMapping("/todas")

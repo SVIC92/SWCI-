@@ -16,6 +16,7 @@ const esEntrada = (tipoMovimiento, cantidad) => {
   if (!tipoMovimiento) return false;
   if (esAjusteConteo(tipoMovimiento)) return cantidad >= 0;
   const tipo = tipoMovimiento.toLowerCase();
+  if (tipo.includes("salida")) return false; // ej: SALIDA_DEVOLUCION / SALIDA_TRANSFERENCIA
   return CLAVES_ENTRADA.some((clave) => tipo.includes(clave));
 };
 

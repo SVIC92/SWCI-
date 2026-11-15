@@ -12,6 +12,9 @@ public interface ConteoInventarioService {
 
     HojaConteoResponseDto registrarConteo(Long hojaId, RegistrarConteoRequestDto dto, Integer usuarioId);
 
+    /** Corrige el conteo ya registrado. Solo permitido mientras la hoja está CONTADA (antes de aprobar/rechazar). */
+    HojaConteoResponseDto modificarConteo(Long hojaId, RegistrarConteoRequestDto dto, Integer usuarioId);
+
     List<HojaConteoResponseDto> listarTodas();
 
     List<HojaConteoResponseDto> listarPendientesAprobacion();

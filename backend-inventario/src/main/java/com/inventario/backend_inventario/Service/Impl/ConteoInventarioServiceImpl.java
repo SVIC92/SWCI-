@@ -33,6 +33,7 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     @Autowired private AreaRepository areaRepo;
     @Autowired private CategoriaRepository categoriaRepo;
     @Autowired private SubcategoriaRepository subcategoriaRepo;
+    @Autowired private com.inventario.backend_inventario.Service.HistorialActividadService historialActividadService;
     @Autowired private InventarioService inventarioService; // Para ejecutar el ajuste real de stock al aprobar
 
     @Override
@@ -177,6 +178,54 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
     }
 
     @Override
+    @Transactional
+    public HojaConteoResponseDto modificarConteo(Long hojaId, RegistrarConteoRequestDto dto, Integer usuarioId) {
+        HojaConteo hoja = hojaRepo.findById(hojaId)
+                .orElseThrow(() -> new ResourceConflictException("Hoja de conteo no encontrada"));
+
+        // Solo se puede corregir un conteo ya registrado que todavía no fue resuelto por el aprobador.
+        if (hoja.getEstado() != EstadoConteo.CONTADA) {
+            throw new ResourceConflictException(
+                    "Solo se puede modificar un conteo que ya fue registrado y aún no está aprobado ni rechazado");
+        }
+
+        Usuario modificador = usuarioRepo.findById(usuarioId)
+                .orElseThrow(() -> new ResourceConflictException("Usuario no encontrado"));
+
+        Map<Long, DetalleConteo> detallesPorId = hoja.getDetalles().stream()
+                .collect(Collectors.toMap(DetalleConteo::getId, d -> d));
+
+        List<String> cambios = new ArrayList<>();
+        for (RegistrarConteoRequestDto.ItemConteo item : dto.getDetalles()) {
+            DetalleConteo detalle = detallesPorId.get(item.getDetalleId());
+            if (detalle == null) {
+                throw new ResourceConflictException(
+                        "El detalle " + item.getDetalleId() + " no pertenece a esta hoja de conteo");
+            }
+            if (!item.getStockContado().equals(detalle.getStockContado())) {
+                cambios.add(String.format("%s (%s): %s -> %d",
+                        detalle.getProducto().getNombre(), detalle.getProducto().getSku(),
+                        detalle.getStockContado(), item.getStockContado()));
+                detalle.setStockContado(item.getStockContado());
+            }
+        }
+
+        if (cambios.isEmpty()) {
+            throw new ResourceConflictException("No se detectaron cambios respecto al conteo registrado");
+        }
+
+        hoja.setUsuarioModificador(modificador);
+        hoja.setFechaModificacion(LocalDateTime.now());
+        HojaConteo guardada = hojaRepo.save(hoja);
+
+        historialActividadService.registrarActividad(modificador, "MODIFICAR_CONTEO",
+                "Modificó el conteo #" + hojaId + " de la sede '" + hoja.getSede().getNombreSede() + "' antes de su aprobación",
+                "CONTEO", "HojaConteo", hojaId, String.join("; ", cambios));
+
+        return mapToDto(guardada);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<HojaConteoResponseDto> listarTodas() {
         return hojaRepo.findAllByOrderByFechaGeneracionDesc().stream()
@@ -273,6 +322,8 @@ public class ConteoInventarioServiceImpl implements ConteoInventarioService {
         dto.setFechaGeneracion(hoja.getFechaGeneracion());
         dto.setFechaConteo(hoja.getFechaConteo());
         dto.setFechaAprobacion(hoja.getFechaAprobacion());
+        dto.setNombreModificador(hoja.getUsuarioModificador() != null ? hoja.getUsuarioModificador().getNombre_u() : null);
+        dto.setFechaModificacion(hoja.getFechaModificacion());
         dto.setMotivoRechazo(hoja.getMotivoRechazo());
         dto.setDetalles(hoja.getDetalles().stream().map(this::mapDetalleToDto).collect(Collectors.toList()));
         return dto;

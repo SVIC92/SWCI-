@@ -16,6 +16,9 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         crearTipoSiNoExiste("SALIDA_TRANSFERENCIA", "Salida de inventario por transferencia a otra sede");
         crearTipoSiNoExiste("ENTRADA_TRANSFERENCIA", "Entrada de inventario por transferencia desde otra sede");
+        crearTipoSiNoExiste("Venta", "Salida de producto por venta.");
+        crearTipoSiNoExiste("SALIDA_DEVOLUCION", "Salida de inventario por devolución de mercadería (a sede/almacén o proveedor)");
+        crearTipoSiNoExiste("ENTRADA_DEVOLUCION", "Entrada de inventario por devolución de mercadería recibida desde otra sede");
     }
 
     private void crearTipoSiNoExiste(String tipo, String descripcion) {

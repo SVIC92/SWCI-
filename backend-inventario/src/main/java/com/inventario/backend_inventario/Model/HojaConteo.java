@@ -39,6 +39,13 @@ public class HojaConteo {
     @JoinColumn(name = "usuario_aprobador_id")
     private Usuario usuarioAprobador;
 
+    // Quién y cuándo corrigió el conteo antes de su aprobación (null si nunca se modificó)
+    @ManyToOne
+    @JoinColumn(name = "usuario_modificador_id")
+    private Usuario usuarioModificador;
+
+    private LocalDateTime fechaModificacion;
+
     private LocalDateTime fechaGeneracion;
     private LocalDateTime fechaConteo;
     private LocalDateTime fechaAprobacion;

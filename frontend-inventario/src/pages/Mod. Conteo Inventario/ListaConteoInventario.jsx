@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Chip,
   Dialog,
@@ -17,10 +17,13 @@ import {
   Paper,
   Grid,
   Typography,
-  IconButton
+  IconButton,
+  TextField
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import Swal from "sweetalert2";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { listarTodasHojasConteo } from "../../api/conteoApi";
+import { listarTodasHojasConteo, modificarConteo } from "../../api/conteoApi";
 import TablaLista from "../../components/TablaLista";
 
 const ESTADO_LABEL = {
@@ -52,6 +55,8 @@ function ListaConteoInventario() {
   const navigate = useNavigate();
   const [hojaSeleccionada, setHojaSeleccionada] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [conteosEditados, setConteosEditados] = useState({});
 
   const { data: response, isLoading, refetch } = useQuery({
     queryKey: ["hojasConteoTodas"],
@@ -75,6 +80,47 @@ function ListaConteoInventario() {
   const cerrarModal = () => {
     setModalOpen(false);
     setHojaSeleccionada(null);
+    setEditando(false);
+    setConteosEditados({});
+  };
+
+  // Solo se puede modificar un conteo ya registrado que aún no fue aprobado ni rechazado.
+  const puedeModificar = hojaSeleccionada?.estado === "CONTADA";
+
+  const iniciarEdicion = () => {
+    const valores = {};
+    hojaSeleccionada.detalles.forEach((det) => {
+      valores[det.id] = det.stockContado ?? "";
+    });
+    setConteosEditados(valores);
+    setEditando(true);
+  };
+
+  const { mutate: guardarModificacion, isPending: guardando } = useMutation({
+    mutationFn: ({ id, data }) => modificarConteo(id, data),
+    onSuccess: () => {
+      Swal.fire("Conteo modificado", "Los cambios quedaron registrados. El conteo sigue pendiente de aprobación.", "success");
+      refetch();
+      cerrarModal();
+    },
+    onError: (error) => {
+      Swal.fire("Error", error.response?.data?.message || "No se pudo modificar el conteo.", "error");
+    }
+  });
+
+  const handleGuardarEdicion = () => {
+    const detalles = hojaSeleccionada.detalles.map((det) => ({
+      detalleId: det.id,
+      stockContado: Number(conteosEditados[det.id])
+    }));
+    const invalido = detalles.find(
+      (d) => Number.isNaN(d.stockContado) || !Number.isInteger(d.stockContado) || d.stockContado < 0
+    );
+    if (invalido) {
+      Swal.fire("Cantidad inválida", "Todas las cantidades deben ser números enteros (0 o más).", "error");
+      return;
+    }
+    guardarModificacion({ id: hojaSeleccionada.id, data: { detalles } });
   };
 
   const columns = [
@@ -165,6 +211,14 @@ function ListaConteoInventario() {
                   <Typography variant="subtitle2" color="textSecondary">Contado por</Typography>
                   <Typography variant="body1">{hojaSeleccionada.nombreContador || "-"}</Typography>
                 </Grid>
+                {hojaSeleccionada.nombreModificador && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Última modificación</Typography>
+                    <Typography variant="body1">
+                      {hojaSeleccionada.nombreModificador} · {formatearFecha(hojaSeleccionada.fechaModificacion)}
+                    </Typography>
+                  </Grid>
+                )}
               </Grid>
 
               {hojaSeleccionada.estado === "RECHAZADA" && hojaSeleccionada.motivoRechazo && (
@@ -186,14 +240,35 @@ function ListaConteoInventario() {
                   </TableHead>
                   <TableBody>
                     {hojaSeleccionada.detalles?.map((det) => {
+                      const contadoVigente = editando
+                        ? conteosEditados[det.id] === "" || conteosEditados[det.id] == null
+                          ? null
+                          : Number(conteosEditados[det.id])
+                        : det.stockContado;
                       const diferencia =
-                        det.stockContado != null ? det.stockContado - det.stockSistema : null;
+                        contadoVigente != null && !Number.isNaN(contadoVigente)
+                          ? contadoVigente - det.stockSistema
+                          : null;
                       return (
                         <TableRow key={det.id}>
                           <TableCell>{det.skuProducto}</TableCell>
                           <TableCell>{det.nombreProducto}</TableCell>
                           <TableCell align="right">{det.stockSistema}</TableCell>
-                          <TableCell align="right">{det.stockContado ?? "-"}</TableCell>
+                          <TableCell align="right">
+                            {editando ? (
+                              <TextField
+                                size="small"
+                                type="number"
+                                value={conteosEditados[det.id] ?? ""}
+                                onChange={(e) =>
+                                  setConteosEditados((prev) => ({ ...prev, [det.id]: e.target.value }))
+                                }
+                                inputProps={{ min: 0, style: { textAlign: "right", width: 80 } }}
+                              />
+                            ) : (
+                              det.stockContado ?? "-"
+                            )}
+                          </TableCell>
                           <TableCell
                             align="right"
                             sx={{
@@ -220,9 +295,27 @@ function ListaConteoInventario() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={cerrarModal} color="inherit">
-            Cerrar
-          </Button>
+          {editando ? (
+            <>
+              <Button onClick={() => setEditando(false)} color="inherit" disabled={guardando}>
+                Cancelar edición
+              </Button>
+              <Button onClick={handleGuardarEdicion} variant="contained" disabled={guardando}>
+                {guardando ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </>
+          ) : (
+            <>
+              {puedeModificar && (
+                <Button onClick={iniciarEdicion} startIcon={<EditIcon />} variant="outlined">
+                  Modificar conteo
+                </Button>
+              )}
+              <Button onClick={cerrarModal} color="inherit">
+                Cerrar
+              </Button>
+            </>
+          )}
         </DialogActions>
       </Dialog>
     </>

@@ -17,7 +17,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.inventario.backend_inventario.Dto.ResultadoImportacionVentasDto;
+import com.inventario.backend_inventario.Exception.ImportacionVentasException;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -140,6 +150,134 @@ public class InventarioServiceImpl implements InventarioService {
             historialActividadService.registrarActividad(usuario, "MERMA", descripcionAuditoria, "INVENTARIO",
                     "MovimientoInventario", movimiento.getId(), observaciones);
         }
+    }
+
+    @Override
+    @Transactional
+    public ResultadoImportacionVentasDto importarVentas(Integer sedeId, MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
+            throw new IllegalArgumentException("Debes adjuntar un archivo CSV con datos.");
+        }
+        String nombreArchivo = archivo.getOriginalFilename() != null ? archivo.getOriginalFilename() : "ventas.csv";
+        if (!nombreArchivo.toLowerCase().endsWith(".csv")) {
+            throw new IllegalArgumentException("El archivo debe tener extensión .csv");
+        }
+
+        Usuario usuario = getUsuarioLogueado();
+        Sede sede = sedeRepository.findById(sedeId)
+                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + sedeId));
+        TipoMovimiento tipoVenta = tipoMovimientoRepository.findByTipo("Venta")
+                .orElseThrow(() -> new EntityNotFoundException("Tipo de movimiento 'Venta' no encontrado. Asegúrate de crearlo en la tabla TIPO_MOVIMIENTO."));
+
+        // ---- Fase 1: leer y validar todo el archivo (formato: sku,cantidad) ----
+        List<String> errores = new ArrayList<>();
+        Map<String, Integer> ventasPorSku = new LinkedHashMap<>();
+        Map<String, Producto> productosPorSku = new HashMap<>();
+        int filas = 0;
+
+        String contenido;
+        try {
+            contenido = new String(archivo.getBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("No se pudo leer el archivo CSV.");
+        }
+        if (contenido.startsWith("﻿")) {
+            contenido = contenido.substring(1); // BOM de Excel
+        }
+        String[] lineas = contenido.split("\\r?\\n");
+
+        for (int i = 0; i < lineas.length; i++) {
+            String linea = lineas[i].trim();
+            if (linea.isEmpty()) continue;
+            int nroLinea = i + 1;
+
+            String[] cols = linea.split("[,;\\t]", -1);
+            String sku = cols[0].replace("\"", "").trim();
+            String cantTxt = cols.length > 1 ? cols[1].replace("\"", "").trim() : "";
+
+            // Cabecera opcional: primera línea cuya cantidad no es numérica
+            if (i == 0 && !cantTxt.matches("-?\\d+")) continue;
+
+            filas++;
+            if (cols.length < 2 || sku.isEmpty()) {
+                errores.add("Línea " + nroLinea + ": formato inválido, se esperaba 'sku,cantidad'.");
+                continue;
+            }
+            int cantidad;
+            try {
+                cantidad = Integer.parseInt(cantTxt);
+            } catch (NumberFormatException e) {
+                errores.add("Línea " + nroLinea + ": la cantidad '" + cantTxt + "' no es un número entero.");
+                continue;
+            }
+            if (cantidad <= 0) {
+                errores.add("Línea " + nroLinea + ": la cantidad debe ser mayor a 0.");
+                continue;
+            }
+            Producto producto = productosPorSku.get(sku);
+            if (producto == null) {
+                producto = productoRepository.findBySku(sku).orElse(null);
+                if (producto == null) {
+                    errores.add("Línea " + nroLinea + ": no existe un producto con SKU '" + sku + "'.");
+                    continue;
+                }
+                productosPorSku.put(sku, producto);
+            }
+            ventasPorSku.merge(sku, cantidad, Integer::sum);
+        }
+
+        if (filas == 0 && errores.isEmpty()) {
+            errores.add("El archivo no contiene filas de ventas.");
+        }
+
+        // Validar stock suficiente (sumando todas las filas del mismo SKU)
+        Map<String, Inventario> inventarios = new HashMap<>();
+        for (Map.Entry<String, Integer> e : ventasPorSku.entrySet()) {
+            Producto p = productosPorSku.get(e.getKey());
+            Inventario inv = inventarioRepository.findByProductoAndSede(p, sede).orElse(null);
+            int stock = inv != null ? inv.getStockActual() : 0;
+            if (inv == null || stock < e.getValue()) {
+                errores.add("SKU '" + e.getKey() + "': stock insuficiente en '" + sede.getNombreSede()
+                        + "' (stock " + stock + ", ventas " + e.getValue() + ").");
+            } else {
+                inventarios.put(e.getKey(), inv);
+            }
+        }
+
+        if (!errores.isEmpty()) {
+            throw new ImportacionVentasException("El archivo tiene errores. No se aplicó ninguna venta.", errores);
+        }
+
+        // ---- Fase 2: aplicar descuentos de stock y registrar en el Kardex ----
+        List<String> detalle = new ArrayList<>();
+        int unidades = 0;
+        for (Map.Entry<String, Integer> e : ventasPorSku.entrySet()) {
+            Producto producto = productosPorSku.get(e.getKey());
+            Inventario inventario = inventarios.get(e.getKey());
+
+            int cantidad = e.getValue();
+            int stockAnterior = inventario.getStockActual();
+            int stockNuevo = stockAnterior - cantidad;
+            inventario.setStockActual(stockNuevo);
+            inventarioRepository.save(inventario);
+
+            String observaciones = String.format("Venta importada por CSV (%s). Stock: %d -> %d",
+                    nombreArchivo, stockAnterior, stockNuevo);
+            MovimientoInventario movimiento = new MovimientoInventario(
+                    producto, sede, usuario, tipoVenta, cantidad, observaciones);
+            movimientoInventarioRepository.save(movimiento);
+
+            historialActividadService.registrarActividad(usuario, "VENTA_IMPORTADA",
+                    String.format("Importó venta de %d unidad(es) de '%s' (SKU: %s) en la sede '%s'. Stock: %d -> %d",
+                            cantidad, producto.getNombre(), producto.getSku(), sede.getNombreSede(), stockAnterior, stockNuevo),
+                    "INVENTARIO", "MovimientoInventario", movimiento.getId(), observaciones);
+
+            detalle.add(producto.getSku() + " - " + producto.getNombre() + ": -" + cantidad
+                    + " (stock " + stockAnterior + " -> " + stockNuevo + ")");
+            unidades += cantidad;
+        }
+
+        return new ResultadoImportacionVentasDto(filas, ventasPorSku.size(), unidades, detalle);
     }
 
     @Override
@@ -281,6 +419,73 @@ public class InventarioServiceImpl implements InventarioService {
     }
     @Override
     @Transactional(readOnly = true)
+    public List<InventarioActualDto> listarInventarioPorSede(Integer sedeId) {
+        Sede sede = sedeRepository.findById(sedeId)
+                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + sedeId));
+        return inventarioRepository.findBySede(sede).stream().map(inv -> {
+            InventarioActualDto dto = new InventarioActualDto();
+            dto.setIdInventario(inv.getId());
+            dto.setIdProducto(inv.getProducto().getId_producto());
+            dto.setSkuProducto(inv.getProducto().getSku());
+            dto.setNombreProducto(inv.getProducto().getNombre());
+            dto.setNombreSede(inv.getSede().getNombreSede());
+            dto.setStockActual(inv.getStockActual());
+            dto.setUltimaActualizacion(inv.getUltimaActualizacion());
+            return dto;
+        }).sorted(java.util.Comparator.comparing(InventarioActualDto::getNombreProducto, String.CASE_INSENSITIVE_ORDER))
+          .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public int asociarProductosASede(Integer sedeId, List<Long> productoIds) {
+        Usuario usuario = getUsuarioLogueado();
+        Sede sede = sedeRepository.findById(sedeId)
+                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + sedeId));
+
+        int asociados = 0;
+        for (Long productoId : new java.util.LinkedHashSet<>(productoIds)) {
+            Producto producto = productoRepository.findById(productoId)
+                    .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + productoId));
+            if (inventarioRepository.findByProductoAndSede(producto, sede).isPresent()) {
+                continue; // ya estaba asociado
+            }
+            // Stock inicial 0: el stock real entra por recepción / transferencia / conteo para mantener el Kardex.
+            inventarioRepository.save(new Inventario(producto, sede, 0));
+            historialActividadService.registrarActividad(usuario, "ASOCIAR_PRODUCTO_SEDE",
+                    String.format("Asoció el producto '%s' (SKU: %s) al inventario de la sede '%s'",
+                            producto.getNombre(), producto.getSku(), sede.getNombreSede()),
+                    "INVENTARIO", "Inventario", producto.getId_producto(), "Stock inicial: 0");
+            asociados++;
+        }
+        return asociados;
+    }
+
+    @Override
+    @Transactional
+    public void desasociarProductoDeSede(Integer sedeId, Long productoId) {
+        Usuario usuario = getUsuarioLogueado();
+        Sede sede = sedeRepository.findById(sedeId)
+                .orElseThrow(() -> new EntityNotFoundException("Sede no encontrada con ID: " + sedeId));
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con ID: " + productoId));
+        Inventario inventario = inventarioRepository.findByProductoAndSede(producto, sede)
+                .orElseThrow(() -> new EntityNotFoundException("El producto no está asociado a esta sede"));
+
+        if (inventario.getStockActual() != 0) {
+            throw new IllegalArgumentException("No se puede desasociar '" + producto.getNombre()
+                    + "': aún tiene stock (" + inventario.getStockActual() + "). Transfiérelo o regístralo como merma primero.");
+        }
+
+        inventarioRepository.delete(inventario);
+        historialActividadService.registrarActividad(usuario, "DESASOCIAR_PRODUCTO_SEDE",
+                String.format("Quitó el producto '%s' (SKU: %s) del inventario de la sede '%s'",
+                        producto.getNombre(), producto.getSku(), sede.getNombreSede()),
+                "INVENTARIO", "Inventario", producto.getId_producto(), "Stock al quitar: 0");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public boolean verificarStock(Integer sedeId, Long productoId, Integer cantidad) {
         Sede sede = sedeRepository.findById(sedeId).orElse(null);
         Producto producto = productoRepository.findById(productoId).orElse(null);
@@ -301,6 +506,12 @@ public class InventarioServiceImpl implements InventarioService {
     @Override
     @Transactional
     public void registrarMovimiento(Integer sedeId, Long productoId, String tipoMovimientoStr, Integer cantidad) {
+        registrarMovimiento(sedeId, productoId, tipoMovimientoStr, cantidad, null);
+    }
+
+    @Override
+    @Transactional
+    public void registrarMovimiento(Integer sedeId, Long productoId, String tipoMovimientoStr, Integer cantidad, String detalle) {
         Usuario usuario = getUsuarioLogueado();
 
         // 1. Validar existencias de Sede y Producto
@@ -340,8 +551,11 @@ public class InventarioServiceImpl implements InventarioService {
         inventarioRepository.save(inventario);
 
         // 6. Registrar Movimiento en Kardex
-        String observaciones = String.format("Movimiento automático: %s. Stock: %d -> %d", 
+        String observaciones = String.format("Movimiento automático: %s. Stock: %d -> %d",
                                              tipoMovimientoStr, stockAnterior, stockNuevo);
+        if (detalle != null && !detalle.isBlank()) {
+            observaciones += ". " + detalle;
+        }
 
         MovimientoInventario movimiento = new MovimientoInventario(
                 producto,

@@ -202,6 +202,9 @@ public class ReporteServiceImpl implements ReporteService {
         if (tipo.contains("ajuste")) {
             return m.getCantidad() >= 0;
         }
+        if (tipo.contains("salida")) {
+            return false; // ej: SALIDA_DEVOLUCION / SALIDA_TRANSFERENCIA
+        }
         return tipo.contains("recep") || tipo.contains("devoluci") || tipo.contains("entrada");
     }
 

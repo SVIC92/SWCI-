@@ -58,10 +58,14 @@ import PedidoMercaderia from "./pages/Mod. Proveedor/PedidoMercaderia";
 import DashboardSedes from "./components/Dashboards/Modulos/dashboardSedes";
 import ListaSedes from "./pages/Mod. Sedes/ListaSedes";
 import RegistrarSede from "./pages/Mod. Sedes/RegistrarSede";
+import InventarioSede from "./pages/Mod. Sedes/InventarioSede";
 import GestionTransferencias from "./pages/Mod. Inventario/GestionTransferencias";
 import SolicitarTransferencia from "./pages/Mod. Inventario/SolicitarTransferencia";
 import RegistrarMerma from "./pages/Mod. Inventario/RegistrarMerma";
 import GestionMermas from "./pages/Mod. Inventario/GestionMermas";
+import DevolucionMercaderia from "./pages/Mod. Inventario/DevolucionMercaderia";
+import GestionDevoluciones from "./pages/Mod. Inventario/GestionDevoluciones";
+import ImportarVentas from "./pages/Mod. Inventario/ImportarVentas";
 import DashboardInventario from "./components/Dashboards/Modulos/dashboardInventario";
 
 
@@ -340,6 +344,7 @@ const RutasSedes = [
   ),
   RutaProtegida("listaSedes", "/lista-sedes", ADMIN_JEFE, ListaSedes),
   RutaProtegida("registrarSedes", "/sedes/nuevo", ADMIN_JEFE, RegistrarSede),
+  RutaProtegida("inventarioSede", "/sedes/inventario", ADMIN_JEFE, InventarioSede),
 ];
 
 
@@ -482,6 +487,25 @@ const RutasInventario = [
     "/inventario/transferencia/solicitar",
     ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
     SolicitarTransferencia
+  ),
+
+  RutaProtegida(
+    "devolucion-mercaderia",
+    "/devolucion-mercaderia",
+    ADMIN_JEFE_INV_OP_RECEPCION_TIENDA,
+    DevolucionMercaderia
+  ),
+  RutaProtegida(
+    "gestion-devoluciones",
+    "/inventario/devolucion/gestion",
+    ADMIN_JEFE, // Solo Admin o Jefe de Inventario aprueban/rechazan
+    GestionDevoluciones
+  ),
+  RutaProtegida(
+    "importar-ventas",
+    "/importar-ventas",
+    ADMIN_JEFE,
+    ImportarVentas
   ),
 
   RutaProtegida(

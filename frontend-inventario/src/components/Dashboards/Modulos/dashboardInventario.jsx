@@ -35,9 +35,15 @@ const DashboardInventario = () => {
         {
             id: "devolucion-mercaderia",
             titulo: "Devolución de Mercadería",
-            descripcion: "Registra la devolución de mercadería en el inventario",
+            descripcion: "Solicita devolver mercadería a otra sede/almacén o a un proveedor.",
             ruta: "/devolucion-mercaderia",
         },
+        ...(puedeAprobarMerma ? [{
+            id: "gestion-devolucion",
+            titulo: "Aprobar/Rechazar Devolución",
+            descripcion: "Revisa y aprueba o rechaza las solicitudes de devolución de mercadería.",
+            ruta: "/inventario/devolucion/gestion",
+        }] : []),
         {
             id: "merma",
             titulo: "Merma de Productos",
